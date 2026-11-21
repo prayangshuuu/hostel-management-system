@@ -95,12 +95,13 @@ class ValidationAppError(AppException):
         self,
         message: str = "Validation error",
         code: str = "VALIDATION_ERROR",
+        status_code: int = 422,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
             message=message,
             code=code,
-            status_code=422,
+            status_code=status_code,
             details=details,
         )
 

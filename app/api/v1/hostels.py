@@ -16,6 +16,8 @@ from app.schemas.hostel import (
     HostelCreate,
     HostelRead,
     HostelUpdate,
+    WardenAssignmentRead,
+    WardenAssignRequest,
 )
 from app.services.hostel_service import HostelService
 
@@ -139,3 +141,54 @@ async def list_blocks(
     await service.ensure_hostel_access(current_user, id)
     blocks = await service.list_blocks(id)
     return [BlockRead.model_validate(b) for b in blocks]
+
+
+@router.post(
+    "/{id}/wardens",
+    response_model=WardenAssignmentRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+    summary="Assign a warden to a hostel (admin only)",
+)
+async def assign_warden(
+    id: UUID,
+    body: WardenAssignRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> WardenAssignmentRead:
+    """Assign a warden to manage the specified hostel."""
+    service = HostelService(session)
+    assignment = await service.assign_warden(hostel_id=id, user_id=body.user_id)
+    return WardenAssignmentRead.model_validate(assignment)
+
+
+@router.delete(
+    "/{id}/wardens/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+    summary="Remove a warden assignment (admin only)",
+)
+async def remove_warden(
+    id: UUID,
+    user_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Remove warden assignment from the specified hostel."""
+    service = HostelService(session)
+    await service.remove_warden(hostel_id=id, user_id=user_id)
+
+
+@router.get(
+    "/{id}/wardens",
+    response_model=list[WardenAssignmentRead],
+    summary="List wardens assigned to a hostel (admin or assigned warden)",
+)
+async def list_wardens(
+    id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> list[WardenAssignmentRead]:
+    """Retrieve all warden assignments for a hostel, enforcing warden assignment access."""
+    service = HostelService(session)
+    await service.ensure_hostel_access(current_user, id)
+    assignments = await service.list_wardens(id)
+    return [WardenAssignmentRead.model_validate(a) for a in assignments]
