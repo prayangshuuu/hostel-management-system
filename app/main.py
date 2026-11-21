@@ -11,16 +11,21 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.v1 import api_router
 from app.core.config import settings
 from app.core.exceptions import AppException
+from app.core.logging import RequestIdMiddleware, setup_logging
 
 logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application instance."""
+    setup_logging()
+
     application = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
     )
+
+    application.add_middleware(RequestIdMiddleware)
 
     @application.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
