@@ -2,12 +2,16 @@
 
 import enum
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
 from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.room import Room
 
 
 class GenderType(enum.StrEnum):
@@ -45,8 +49,21 @@ class Hostel(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
 
     @property
     def total_capacity(self) -> int:
-        """Total capacity across all rooms in this hostel (computed; 0 until rooms exist)."""
-        return 0
+        """Total capacity across all active rooms in this hostel."""
+        from sqlalchemy import inspect
+
+        insp = inspect(self)
+        if "blocks" in insp.unloaded:
+            return 0
+        total = 0
+        for block in self.blocks:
+            b_insp = inspect(block)
+            if "rooms" in b_insp.unloaded:
+                continue
+            for room in block.rooms:
+                if not room.is_deleted:
+                    total += room.capacity
+        return total
 
     def __repr__(self) -> str:
         return f"<Hostel id={self.id} code={self.code} name={self.name}>"
@@ -72,6 +89,11 @@ class Block(Base, UUIDPkMixin, TimestampMixin):
     )
 
     hostel: Mapped["Hostel"] = relationship("Hostel", back_populates="blocks")
+    rooms: Mapped[list["Room"]] = relationship(
+        "Room",
+        back_populates="block",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Block id={self.id} hostel_id={self.hostel_id} name={self.name}>"
