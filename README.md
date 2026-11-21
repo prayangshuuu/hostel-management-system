@@ -7,13 +7,19 @@ FastAPI backend REST API for managing university and private hostels.
 - FastAPI
 - Pydantic v2 & Pydantic Settings
 - SQLAlchemy 2.0 (async) & Alembic
-- PostgreSQL & asyncpg
+- PostgreSQL 16 & asyncpg
 - Pytest, Ruff, Mypy
 
 ## Quick Start
 ```bash
+# Start PostgreSQL database
+docker compose up -d db
+
 # Install dependencies
 uv sync
+
+# Run database migrations
+uv run alembic upgrade head
 
 # Run development server
 uv run uvicorn app.main:app --reload
@@ -34,6 +40,7 @@ uv run mypy app
 ```
 
 ## Modules
+- [x] Core infra (Settings, DB session, Alembic, Unified Errors, Structured Logging) ✅
 - [x] Health Check (`/api/v1/health`)
 - [ ] Authentication & Users
 - [ ] Hostels & Blocks
@@ -53,6 +60,13 @@ uv run mypy app
 ## Environment Variables
 | Variable | Description | Default |
 |---|---|---|
-| `APP_ENV` | Application environment (`development`, `staging`, `production`) | `development` |
 | `APP_NAME` | Application name for OpenAPI schema | `Hostel Management System` |
 | `APP_VERSION` | Application version | `0.1.0` |
+| `APP_ENV` | Application environment (`development`, `staging`, `production`) | `development` |
+| `DEBUG` | Enable SQLAlchemy debug query logging | `false` |
+| `DATABASE_URL` | PostgreSQL async connection URL | `postgresql+asyncpg://postgres:postgres@localhost:5432/hostel_db` |
+| `SECRET_KEY` | Secret key for JWT token signing | `insecure-dev-secret-key-change-in-production` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime in minutes | `30` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime in days | `7` |
+| `CORS_ORIGINS` | Allowed CORS origins (JSON array or comma-separated) | `["*"]` |
+| `LOG_LEVEL` | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) | `INFO` |
