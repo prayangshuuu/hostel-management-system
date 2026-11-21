@@ -1,11 +1,17 @@
 """User and role database models."""
 
+from __future__ import annotations
+
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Enum, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPkMixin
+
+if TYPE_CHECKING:
+    from app.models.student import StudentProfile
 
 
 class UserRole(enum.StrEnum):
@@ -50,6 +56,13 @@ class User(Base, UUIDPkMixin, TimestampMixin):
         default=True,
         server_default="true",
         nullable=False,
+    )
+
+    student_profile: Mapped[StudentProfile | None] = relationship(
+        "StudentProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

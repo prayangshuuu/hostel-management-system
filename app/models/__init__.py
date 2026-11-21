@@ -2,6 +2,7 @@
 
 from app.models.hostel import Block, GenderType, Hostel, WardenAssignment
 from app.models.room import Bed, Room, RoomStatus, RoomType
+from app.models.student import StudentProfile
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -12,6 +13,7 @@ __all__ = [
     "Room",
     "RoomStatus",
     "RoomType",
+    "StudentProfile",
     "User",
     "UserRole",
     "WardenAssignment",
