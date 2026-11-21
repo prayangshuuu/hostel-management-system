@@ -70,6 +70,24 @@ def test_bed_model_attributes() -> None:
     assert columns["is_occupied"].nullable is False
 
 
+def test_room_and_bed_repr_and_computed_properties() -> None:
+    """Verify Room and Bed repr and computed bed counts."""
+    room = Room(number="101", capacity=2)
+    bed = Bed(label="A")
+    assert "101" in repr(room)
+    assert "A" in repr(bed)
+
+    # When beds are unloaded, count defaults to 0 and available to capacity
+    assert room.occupied_beds_count == 0
+    assert room.available_beds_count == 2
+
+    # Setters override values
+    room.occupied_beds_count = 1
+    assert room.occupied_beds_count == 1
+    room.available_beds_count = 1
+    assert room.available_beds_count == 1
+
+
 @pytest.mark.asyncio
 async def test_room_and_bed_creation_and_relationships() -> None:
     """Verify room and bed persistence, relationships, and ordering."""
