@@ -12,6 +12,7 @@ from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
 from app.models.hostel import GenderType
 
 if TYPE_CHECKING:
+    from app.models.allocation import Allocation
     from app.models.user import User
 
 
@@ -60,6 +61,12 @@ class StudentProfile(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
     user: Mapped[User] = relationship(
         "User",
         back_populates="student_profile",
+    )
+    allocations: Mapped[list[Allocation]] = relationship(
+        "Allocation",
+        back_populates="student",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     def __repr__(self) -> str:

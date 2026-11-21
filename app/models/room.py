@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
 
 if TYPE_CHECKING:
+    from app.models.allocation import Allocation
     from app.models.hostel import Block
 
 
@@ -124,6 +125,12 @@ class Bed(Base, UUIDPkMixin, TimestampMixin):
     )
 
     room: Mapped[Room] = relationship("Room", back_populates="beds")
+    allocations: Mapped[list[Allocation]] = relationship(
+        "Allocation",
+        back_populates="bed",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     def __repr__(self) -> str:
         return f"<Bed id={self.id} room_id={self.room_id} label={self.label}>"
