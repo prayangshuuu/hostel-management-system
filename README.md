@@ -21,6 +21,9 @@ uv sync
 # Run database migrations
 uv run alembic upgrade head
 
+# Create first admin user
+uv run python scripts/create_admin.py --email admin@example.com --password AdminPassword123 --name "System Admin"
+
 # Run development server
 uv run uvicorn app.main:app --reload
 ```
@@ -41,8 +44,8 @@ uv run mypy app
 
 ## Modules
 - [x] Core infra (Settings, DB session, Alembic, Unified Errors, Structured Logging) ✅
-- [x] Health Check (`/api/v1/health`)
-- [ ] Authentication & Users
+- [x] Health Check (`/api/v1/health`) ✅
+- [x] Authentication & Users (`/api/v1/auth`, `/api/v1/users`) ✅
 - [ ] Hostels & Blocks
 - [ ] Rooms & Beds
 - [ ] Student Profiles
@@ -66,6 +69,7 @@ uv run mypy app
 | `DEBUG` | Enable SQLAlchemy debug query logging | `false` |
 | `DATABASE_URL` | PostgreSQL async connection URL | `postgresql+asyncpg://postgres:postgres@localhost:5432/hostel_db` |
 | `SECRET_KEY` | Secret key for JWT token signing | `insecure-dev-secret-key-change-in-production` |
+| `JWT_ALGORITHM` | JWT signing algorithm | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime in minutes | `30` |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime in days | `7` |
 | `CORS_ORIGINS` | Allowed CORS origins (JSON array or comma-separated) | `["*"]` |
