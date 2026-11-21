@@ -50,6 +50,8 @@ class Hostel(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
     @property
     def total_capacity(self) -> int:
         """Total capacity across all active rooms in this hostel."""
+        if hasattr(self, "_total_capacity") and self._total_capacity is not None:
+            return self._total_capacity
         from sqlalchemy import inspect
 
         insp = inspect(self)
@@ -64,6 +66,10 @@ class Hostel(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
                 if not room.is_deleted:
                     total += room.capacity
         return total
+
+    @total_capacity.setter
+    def total_capacity(self, value: int) -> None:
+        self._total_capacity = value
 
     def __repr__(self) -> str:
         return f"<Hostel id={self.id} code={self.code} name={self.name}>"

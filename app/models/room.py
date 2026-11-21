@@ -67,6 +67,38 @@ class Room(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
         order_by="Bed.label",
     )
 
+    @property
+    def occupied_beds_count(self) -> int:
+        """Count of occupied beds in this room."""
+        if hasattr(self, "_occupied_beds_count") and self._occupied_beds_count is not None:
+            return self._occupied_beds_count
+        from sqlalchemy import inspect
+
+        insp = inspect(self)
+        if "beds" in insp.unloaded:
+            return 0
+        return sum(1 for b in self.beds if b.is_occupied)
+
+    @occupied_beds_count.setter
+    def occupied_beds_count(self, value: int) -> None:
+        self._occupied_beds_count = value
+
+    @property
+    def available_beds_count(self) -> int:
+        """Count of available beds in this room."""
+        if hasattr(self, "_available_beds_count") and self._available_beds_count is not None:
+            return self._available_beds_count
+        from sqlalchemy import inspect
+
+        insp = inspect(self)
+        if "beds" in insp.unloaded:
+            return max(0, self.capacity - self.occupied_beds_count)
+        return sum(1 for b in self.beds if not b.is_occupied)
+
+    @available_beds_count.setter
+    def available_beds_count(self, value: int) -> None:
+        self._available_beds_count = value
+
     def __repr__(self) -> str:
         return f"<Room id={self.id} number={self.number} block_id={self.block_id}>"
 

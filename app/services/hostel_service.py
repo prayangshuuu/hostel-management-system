@@ -12,6 +12,7 @@ from app.repositories.hostel_repository import (
     HostelRepository,
     WardenAssignmentRepository,
 )
+from app.repositories.room_repository import RoomRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.common import Page, PaginationParams
 from app.schemas.hostel import (
@@ -33,12 +34,14 @@ class HostelService:
         block_repo: BlockRepository | None = None,
         warden_repo: WardenAssignmentRepository | None = None,
         user_repo: UserRepository | None = None,
+        room_repo: RoomRepository | None = None,
     ) -> None:
         self.session = session
         self.hostel_repo = hostel_repo or HostelRepository(session)
         self.block_repo = block_repo or BlockRepository(session)
         self.warden_repo = warden_repo or WardenAssignmentRepository(session)
         self.user_repo = user_repo or UserRepository(session)
+        self.room_repo = room_repo or RoomRepository(session)
 
     async def ensure_hostel_access(self, user: User, hostel_id: UUID) -> bool:
         """Enforce access rules: admin passes, warden must be assigned, others forbidden."""
@@ -75,6 +78,7 @@ class HostelService:
         hostel = await self.hostel_repo.get_by_id(hostel_id, include_deleted=include_deleted)
         if hostel is None:
             raise NotFoundError("Hostel not found", code="HOSTEL_NOT_FOUND")
+        hostel.total_capacity = await self.room_repo.get_total_capacity_for_hostel(hostel.id)
         return hostel
 
     async def list_hostels(
@@ -89,6 +93,8 @@ class HostelService:
             gender_type=gender_type,
             search=search,
         )
+        for h in hostels:
+            h.total_capacity = await self.room_repo.get_total_capacity_for_hostel(h.id)
         items = [HostelRead.model_validate(h) for h in hostels]
         return Page.create(items=items, total=total, params=params)
 

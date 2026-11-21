@@ -113,11 +113,12 @@ class BusinessRuleError(AppException):
         self,
         message: str = "Business rule violation",
         code: str = "BUSINESS_RULE_VIOLATION",
+        status_code: int = 400,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
             message=message,
             code=code,
-            status_code=400,
+            status_code=status_code,
             details=details,
         )

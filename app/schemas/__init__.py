@@ -20,9 +20,20 @@ from app.schemas.hostel import (
     WardenAssignmentRead,
     WardenAssignRequest,
 )
+from app.schemas.room import (
+    BedRead,
+    RoomBase,
+    RoomCreate,
+    RoomRead,
+    RoomStatus,
+    RoomType,
+    RoomUpdate,
+    RoomWithBedsRead,
+)
 from app.schemas.user import UserBase, UserCreate, UserRead, UserUpdate
 
 __all__ = [
+    "BedRead",
     "BlockBase",
     "BlockCreate",
     "BlockRead",
@@ -37,6 +48,13 @@ __all__ = [
     "Page",
     "PaginationParams",
     "RefreshTokenRequest",
+    "RoomBase",
+    "RoomCreate",
+    "RoomRead",
+    "RoomStatus",
+    "RoomType",
+    "RoomUpdate",
+    "RoomWithBedsRead",
     "TokenResponse",
     "UserBase",
     "UserCreate",

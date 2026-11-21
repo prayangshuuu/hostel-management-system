@@ -5,11 +5,14 @@ from app.repositories.hostel_repository import (
     HostelRepository,
     WardenAssignmentRepository,
 )
+from app.repositories.room_repository import BedRepository, RoomRepository
 from app.repositories.user_repository import UserRepository
 
 __all__ = [
+    "BedRepository",
     "BlockRepository",
     "HostelRepository",
+    "RoomRepository",
     "UserRepository",
     "WardenAssignmentRepository",
 ]
