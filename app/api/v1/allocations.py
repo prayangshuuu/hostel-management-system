@@ -13,6 +13,8 @@ from app.models.user import User, UserRole
 from app.schemas.allocation import (
     AllocationCreate,
     AllocationRead,
+    AllocationTransferRequest,
+    AllocationVacateRequest,
     OccupantRead,
 )
 from app.schemas.common import Page, PaginationParams
@@ -120,4 +122,54 @@ async def get_allocation(
     """Retrieve detailed allocation record enforcing ownership or warden access."""
     service = AllocationService(session)
     allocation = await service.get_allocation(id=id, current_user=current_user)
+    return AllocationRead.model_validate(allocation)
+
+
+@router.post(
+    "/allocations/{id}/vacate",
+    response_model=AllocationRead,
+    summary="Vacate an active allocation (admin or warden)",
+)
+async def vacate_allocation(
+    id: UUID,
+    body: AllocationVacateRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.WARDEN))],
+) -> AllocationRead:
+    """Vacate an active allocation, mark bed available, and update room status."""
+    service = AllocationService(session)
+    allocation = await service.vacate(allocation_id=id, data=body, current_user=current_user)
+    return AllocationRead.model_validate(allocation)
+
+
+@router.post(
+    "/allocations/{id}/transfer",
+    response_model=AllocationRead,
+    summary="Transfer student to a new bed or room atomically (admin or warden)",
+)
+async def transfer_allocation(
+    id: UUID,
+    body: AllocationTransferRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.WARDEN))],
+) -> AllocationRead:
+    """Atomically vacate existing bed and assign student to new bed in a single transaction."""
+    service = AllocationService(session)
+    allocation = await service.transfer(allocation_id=id, data=body, current_user=current_user)
+    return AllocationRead.model_validate(allocation)
+
+
+@router.post(
+    "/allocations/{id}/cancel",
+    response_model=AllocationRead,
+    summary="Cancel future allocation (admin or warden)",
+)
+async def cancel_allocation(
+    id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.WARDEN))],
+) -> AllocationRead:
+    """Cancel an allocation starting in the future, freeing the reserved bed."""
+    service = AllocationService(session)
+    allocation = await service.cancel(allocation_id=id, current_user=current_user)
     return AllocationRead.model_validate(allocation)

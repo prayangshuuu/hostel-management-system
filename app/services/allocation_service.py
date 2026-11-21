@@ -27,6 +27,8 @@ from app.repositories.student_repository import StudentRepository
 from app.schemas.allocation import (
     AllocationCreate,
     AllocationRead,
+    AllocationTransferRequest,
+    AllocationVacateRequest,
     OccupantRead,
 )
 from app.schemas.common import Page, PaginationParams
@@ -184,6 +186,248 @@ class AllocationService:
 
         loaded = await self.allocation_repo.get_by_id(allocation.id)
         return loaded or allocation
+
+    async def vacate(
+        self, allocation_id: UUID, data: AllocationVacateRequest, current_user: User
+    ) -> Allocation:
+        """End an active room bed allocation, freeing the bed and updating room status."""
+        user_role = (
+            current_user.role.value
+            if isinstance(current_user.role, UserRole)
+            else str(current_user.role)
+        )
+        if user_role not in (UserRole.ADMIN.value, UserRole.WARDEN.value):
+            raise ForbiddenError("Only admin and warden can vacate allocations", code="FORBIDDEN")
+
+        allocation = await self.allocation_repo.get_by_id(allocation_id)
+        if allocation is None:
+            raise NotFoundError("Allocation not found", code="ALLOCATION_NOT_FOUND")
+
+        hostel_id = allocation.bed.room.block.hostel_id
+        await ensure_hostel_access(self.session, current_user, hostel_id)
+
+        if allocation.status != AllocationStatus.ACTIVE:
+            raise BusinessRuleError(
+                "Only active allocations can be vacated",
+                code="ALLOCATION_NOT_ACTIVE",
+                status_code=400,
+            )
+
+        allocation.status = AllocationStatus.ENDED
+        allocation.end_date = data.end_date or date.today()
+        if data.reason is not None:
+            allocation.reason = data.reason
+
+        bed = allocation.bed
+        bed.is_occupied = False
+        await self.bed_repo.update(bed)
+
+        room = await self.room_repo.get_by_id(bed.room_id, include_deleted=False, load_beds=True)
+        if room is not None:
+            RoomService.recalculate_status(room)
+            await self.room_repo.update(room)
+
+        await self.allocation_repo.update(allocation)
+        return allocation
+
+    async def transfer(
+        self, allocation_id: UUID, data: AllocationTransferRequest, current_user: User
+    ) -> Allocation:
+        """Atomically vacate existing allocation and assign a new bed in a single transaction."""
+        user_role = (
+            current_user.role.value
+            if isinstance(current_user.role, UserRole)
+            else str(current_user.role)
+        )
+        if user_role not in (UserRole.ADMIN.value, UserRole.WARDEN.value):
+            raise ForbiddenError("Only admin and warden can transfer allocations", code="FORBIDDEN")
+
+        allocation = await self.allocation_repo.get_by_id(allocation_id)
+        if allocation is None:
+            raise NotFoundError("Allocation not found", code="ALLOCATION_NOT_FOUND")
+
+        if allocation.status != AllocationStatus.ACTIVE:
+            raise BusinessRuleError(
+                "Only active allocations can be transferred",
+                code="ALLOCATION_NOT_ACTIVE",
+                status_code=400,
+            )
+
+        old_hostel_id = allocation.bed.room.block.hostel_id
+        await ensure_hostel_access(self.session, current_user, old_hostel_id)
+
+        student_id = allocation.student_id
+        student = allocation.student
+
+        async with self.session.begin_nested():
+            allocation.status = AllocationStatus.ENDED
+            allocation.end_date = date.today()
+            allocation.reason = data.reason or "Transferred to new bed/room"
+
+            old_bed = allocation.bed
+            old_bed.is_occupied = False
+            await self.bed_repo.update(old_bed)
+
+            old_room = await self.room_repo.get_by_id(
+                old_bed.room_id, include_deleted=False, load_beds=True
+            )
+            if old_room is not None:
+                RoomService.recalculate_status(old_room)
+                await self.room_repo.update(old_room)
+
+            await self.allocation_repo.update(allocation)
+
+            new_bed: Bed | None = None
+            if data.new_bed_id is not None:
+                if data.new_bed_id == old_bed.id:
+                    raise BusinessRuleError(
+                        "Cannot transfer to the same bed currently occupied",
+                        code="CANNOT_TRANSFER_TO_SAME_BED",
+                        status_code=400,
+                    )
+                new_bed = await self.bed_repo.get_by_id_for_update(data.new_bed_id)
+                if new_bed is None:
+                    raise NotFoundError("New bed not found", code="BED_NOT_FOUND")
+                if data.new_room_id is not None and new_bed.room_id != data.new_room_id:
+                    raise BusinessRuleError(
+                        "New bed does not belong to specified new room",
+                        code="BED_NOT_IN_ROOM",
+                        status_code=400,
+                    )
+            elif data.new_room_id is not None:
+                room_check = await self.room_repo.get_by_id(data.new_room_id, include_deleted=False)
+                if room_check is None:
+                    raise NotFoundError("New room not found", code="ROOM_NOT_FOUND")
+
+                room_beds = await self.bed_repo.list_by_room(data.new_room_id)
+                free_bed = next((b for b in room_beds if not b.is_occupied), None)
+                if free_bed is None:
+                    raise BusinessRuleError("Room is full", code="ROOM_FULL", status_code=400)
+
+                new_bed = await self.bed_repo.get_by_id_for_update(free_bed.id)
+                if new_bed is None:
+                    raise NotFoundError("New bed not found", code="BED_NOT_FOUND")
+            else:
+                raise BusinessRuleError(
+                    "Either new_bed_id or new_room_id must be provided",
+                    code="BED_OR_ROOM_REQUIRED",
+                    status_code=400,
+                )
+
+            if new_bed.is_occupied:
+                raise BusinessRuleError(
+                    "New bed is already occupied",
+                    code="BED_ALREADY_OCCUPIED",
+                    status_code=400,
+                )
+
+            active_bed_alloc = await self.allocation_repo.get_active_by_bed_id(new_bed.id)
+            if active_bed_alloc is not None:
+                raise BusinessRuleError(
+                    "New bed is already occupied",
+                    code="BED_ALREADY_OCCUPIED",
+                    status_code=400,
+                )
+
+            new_room = await self.room_repo.get_by_id(
+                new_bed.room_id, include_deleted=False, load_beds=True
+            )
+            if new_room is None or new_room.is_deleted:
+                raise NotFoundError("New room not found", code="ROOM_NOT_FOUND")
+
+            if new_room.status == RoomStatus.MAINTENANCE:
+                raise BusinessRuleError(
+                    "New room is under maintenance",
+                    code="ROOM_UNDER_MAINTENANCE",
+                    status_code=400,
+                )
+
+            new_block = await self.block_repo.get_by_id(new_room.block_id)
+            if new_block is None:
+                raise NotFoundError("Block not found", code="BLOCK_NOT_FOUND")
+
+            new_hostel = await self.hostel_repo.get_by_id(new_block.hostel_id)
+            if new_hostel is None or new_hostel.is_deleted:
+                raise NotFoundError("Hostel not found", code="HOSTEL_NOT_FOUND")
+
+            await ensure_hostel_access(self.session, current_user, new_hostel.id)
+
+            if (
+                new_hostel.gender_type != GenderType.MIXED
+                and student.gender.value != new_hostel.gender_type.value
+            ):
+                raise BusinessRuleError(
+                    "Student gender does not match hostel gender type",
+                    code="GENDER_MISMATCH",
+                    status_code=400,
+                )
+
+            new_bed.is_occupied = True
+            await self.bed_repo.update(new_bed)
+
+            RoomService.recalculate_status(new_room)
+            await self.room_repo.update(new_room)
+
+            new_allocation = Allocation(
+                student_id=student_id,
+                bed_id=new_bed.id,
+                start_date=date.today(),
+                status=AllocationStatus.ACTIVE,
+            )
+
+            try:
+                await self.allocation_repo.create(new_allocation)
+            except IntegrityError as exc:
+                raise ConflictError(
+                    "Allocation conflict detected", code="ALLOCATION_CONFLICT"
+                ) from exc
+
+        loaded = await self.allocation_repo.get_by_id(new_allocation.id)
+        return loaded or new_allocation
+
+    async def cancel(self, allocation_id: UUID, current_user: User) -> Allocation:
+        """Cancel an allocation scheduled to start in the future, freeing reserved resources."""
+        user_role = (
+            current_user.role.value
+            if isinstance(current_user.role, UserRole)
+            else str(current_user.role)
+        )
+        if user_role not in (UserRole.ADMIN.value, UserRole.WARDEN.value):
+            raise ForbiddenError("Only admin and warden can cancel allocations", code="FORBIDDEN")
+
+        allocation = await self.allocation_repo.get_by_id(allocation_id)
+        if allocation is None:
+            raise NotFoundError("Allocation not found", code="ALLOCATION_NOT_FOUND")
+
+        hostel_id = allocation.bed.room.block.hostel_id
+        await ensure_hostel_access(self.session, current_user, hostel_id)
+
+        if allocation.status != AllocationStatus.ACTIVE:
+            raise BusinessRuleError(
+                "Only active allocations can be cancelled",
+                code="ALLOCATION_NOT_ACTIVE",
+                status_code=400,
+            )
+
+        if allocation.start_date <= date.today():
+            raise BusinessRuleError(
+                "Can only cancel allocations starting in the future",
+                code="CANNOT_CANCEL_ACTIVE_ALLOCATION",
+                status_code=400,
+            )
+
+        allocation.status = AllocationStatus.CANCELLED
+        bed = allocation.bed
+        bed.is_occupied = False
+        await self.bed_repo.update(bed)
+
+        room = await self.room_repo.get_by_id(bed.room_id, include_deleted=False, load_beds=True)
+        if room is not None:
+            RoomService.recalculate_status(room)
+            await self.room_repo.update(room)
+
+        await self.allocation_repo.update(allocation)
+        return allocation
 
     async def get_allocation(self, id: UUID, current_user: User) -> Allocation:
         """Retrieve allocation by ID with role-based scoping."""
