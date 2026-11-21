@@ -1,5 +1,13 @@
 """Pydantic request and response schemas."""
 
+from app.schemas.allocation import (
+    AllocationCreate,
+    AllocationRead,
+    AllocationStatus,
+    AllocationTransferRequest,
+    AllocationVacateRequest,
+    OccupantRead,
+)
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -40,6 +48,11 @@ from app.schemas.student import (
 from app.schemas.user import UserBase, UserCreate, UserRead, UserUpdate
 
 __all__ = [
+    "AllocationCreate",
+    "AllocationRead",
+    "AllocationStatus",
+    "AllocationTransferRequest",
+    "AllocationVacateRequest",
     "BedRead",
     "BlockBase",
     "BlockCreate",
@@ -52,6 +65,7 @@ __all__ = [
     "HostelRead",
     "HostelUpdate",
     "LoginRequest",
+    "OccupantRead",
     "Page",
     "PaginationParams",
     "RefreshTokenRequest",

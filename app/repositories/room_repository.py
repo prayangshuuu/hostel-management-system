@@ -222,6 +222,20 @@ class BedRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_id_for_update(self, id: UUID) -> Bed | None:
+        """Fetch a single bed by primary key UUID, locking the row on PostgreSQL."""
+        stmt = select(Bed).where(Bed.id == id)
+        bind = self.session.bind
+        if bind and getattr(bind.dialect, "name", "") == "postgresql":
+            stmt = stmt.with_for_update()
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def update(self, bed: Bed) -> Bed:
+        """Flush changes to an existing bed record."""
+        await self.session.flush()
+        return bed
+
     async def list_by_room(self, room_id: UUID) -> list[Bed]:
         """Fetch all beds for a given room ordered by label."""
         stmt = select(Bed).where(Bed.room_id == room_id).order_by(Bed.label.asc())

@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.models.hostel import GenderType
+from app.schemas.allocation import AllocationRead
 
 PHONE_REGEX = r"^\+?[1-9]\d{1,14}$"
 phone_pattern = re.compile(PHONE_REGEX)
@@ -143,8 +144,8 @@ class StudentProfileRead(BaseModel):
     phone: str | None = None
     is_active: bool
 
-    # Allocation placeholder (PROMPT_7)
-    current_allocation: dict[str, Any] | None = None
+    # Allocation (PROMPT_7)
+    current_allocation: AllocationRead | dict[str, Any] | None = None
 
     @model_validator(mode="before")
     @classmethod

@@ -11,6 +11,7 @@ from app.core.security import hash_password, validate_password_policy
 from app.models.hostel import GenderType
 from app.models.student import StudentProfile
 from app.models.user import User, UserRole
+from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.hostel_repository import WardenAssignmentRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
@@ -42,20 +43,27 @@ class StudentService:
         student_repo: StudentRepository | None = None,
         user_repo: UserRepository | None = None,
         warden_repo: WardenAssignmentRepository | None = None,
+        allocation_repo: AllocationRepository | None = None,
     ) -> None:
         self.session = session
         self.student_repo = student_repo or StudentRepository(session)
         self.user_repo = user_repo or UserRepository(session)
         self.warden_repo = warden_repo or WardenAssignmentRepository(session)
+        self.allocation_repo = allocation_repo or AllocationRepository(session)
 
     async def _ensure_warden_can_access_student(
         self, warden: User, profile: StudentProfile
     ) -> None:
         """Scoping hook: Warden sees students allocated in assigned hostels or unallocated."""
-        # Scoping logic for PROMPT_7:
-        # Check active allocation of profile; if active, warden must be assigned to student's
-        # hostel. If unallocated, access is granted.
-        return None
+        active_alloc = await self.allocation_repo.get_active_by_student_id(profile.id)
+        if active_alloc is not None:
+            hostel_id = active_alloc.bed.room.block.hostel_id
+            warden_hostels = await self.warden_repo.list_hostel_ids_for_warden(warden.id)
+            if hostel_id not in warden_hostels:
+                raise ForbiddenError(
+                    "You cannot access students allocated outside your assigned hostels",
+                    code="FORBIDDEN",
+                )
 
     async def create_student(
         self, data: StudentCreate, current_user: User
@@ -148,6 +156,7 @@ class StudentService:
         profile = await self.student_repo.get_by_user_id(current_user.id)
         if profile is None:
             raise NotFoundError("Student profile not found", code="PROFILE_NOT_FOUND")
+        profile.current_allocation = await self.allocation_repo.get_active_by_student_id(profile.id)
         return profile
 
     async def update_my_profile(
@@ -187,6 +196,9 @@ class StudentService:
                     "You cannot view other student profiles",
                     code="FORBIDDEN",
                 )
+            my_profile.current_allocation = await self.allocation_repo.get_active_by_student_id(
+                my_profile.id
+            )
             return my_profile
 
         profile = await self.student_repo.get_by_id(id)
@@ -196,6 +208,7 @@ class StudentService:
         if user_role == UserRole.WARDEN.value:
             await self._ensure_warden_can_access_student(current_user, profile)
 
+        profile.current_allocation = await self.allocation_repo.get_active_by_student_id(profile.id)
         return profile
 
     async def update_student(
@@ -308,6 +321,9 @@ class StudentService:
             search=search,
             warden_hostel_ids=warden_hostel_ids,
         )
+
+        for p in profiles:
+            p.current_allocation = await self.allocation_repo.get_active_by_student_id(p.id)
 
         items = [StudentProfileRead.model_validate(p) for p in profiles]
         return Page.create(items=items, total=total, params=params)

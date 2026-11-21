@@ -69,5 +69,14 @@ class StudentProfile(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
         passive_deletes=True,
     )
 
+    @property
+    def current_allocation(self) -> Allocation | None:
+        """Active allocation for this student profile, if populated."""
+        return getattr(self, "_current_allocation", None)
+
+    @current_allocation.setter
+    def current_allocation(self, value: Allocation | None) -> None:
+        self._current_allocation = value
+
     def __repr__(self) -> str:
         return f"<StudentProfile id={self.id} student_no={self.student_no} user_id={self.user_id}>"
