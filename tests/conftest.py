@@ -184,3 +184,24 @@ def warden_headers(warden_token: str) -> dict[str, str]:
 def student_headers(student_token: str) -> dict[str, str]:
     """Authorization headers for student user."""
     return {"Authorization": f"Bearer {student_token}"}
+
+
+@pytest.fixture
+async def admin_client(client: AsyncClient, admin_headers: dict[str, str]) -> AsyncClient:
+    """Authenticated client for admin user."""
+    client.headers.update(admin_headers)
+    return client
+
+
+@pytest.fixture
+async def warden_client(client: AsyncClient, warden_headers: dict[str, str]) -> AsyncClient:
+    """Authenticated client for warden user."""
+    client.headers.update(warden_headers)
+    return client
+
+
+@pytest.fixture
+async def student_client(client: AsyncClient, student_headers: dict[str, str]) -> AsyncClient:
+    """Authenticated client for student user."""
+    client.headers.update(student_headers)
+    return client
