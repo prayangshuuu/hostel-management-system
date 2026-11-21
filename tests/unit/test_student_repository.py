@@ -99,6 +99,9 @@ async def test_student_repo_update_and_soft_delete(db_session: AsyncSession) -> 
     assert await repo.get_by_id(profile.id, include_deleted=False) is None
     assert await repo.get_by_user_id(user.id, include_deleted=False) is None
     assert await repo.get_by_student_no("REPO-STU-UPDATE", include_deleted=False) is None
+    listed, total = await repo.list(PaginationParams(page=1, size=10), search="REPO-STU-UPDATE")
+    assert total == 0
+    assert len(listed) == 0
 
     # Included when include_deleted=True
     assert await repo.get_by_id(profile.id, include_deleted=True) is not None

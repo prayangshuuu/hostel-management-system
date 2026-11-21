@@ -443,6 +443,14 @@ async def test_student_update_and_delete_lifecycle(
     )
     assert get_after_delete.status_code == 404
 
+    # Soft-deleted student is hidden from GET /api/v1/students list
+    list_after_delete = await client.get(
+        "/api/v1/students?search=STU-LIFE-01",
+        headers=admin_headers,
+    )
+    assert list_after_delete.status_code == 200
+    assert not any(s["id"] == student_id for s in list_after_delete.json()["items"])
+
     # 7. User account is deactivated, so student cannot log in
     login_after_delete = await client.post(
         "/api/v1/auth/login",
