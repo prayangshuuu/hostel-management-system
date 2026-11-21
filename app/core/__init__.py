@@ -10,6 +10,14 @@ from app.core.exceptions import (
     UnauthorizedError,
     ValidationAppError,
 )
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    validate_password_policy,
+    verify_password,
+)
 
 __all__ = [
     "AppException",
@@ -19,6 +27,12 @@ __all__ = [
     "NotFoundError",
     "UnauthorizedError",
     "ValidationAppError",
+    "create_access_token",
+    "create_refresh_token",
+    "decode_token",
     "get_settings",
+    "hash_password",
     "settings",
+    "validate_password_policy",
+    "verify_password",
 ]

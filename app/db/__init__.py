@@ -1,7 +1,13 @@
 """Database package exports."""
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
-from app.db.session import AsyncSessionLocal, async_session_factory, engine, get_db
+from app.db.session import (
+    AsyncSessionLocal,
+    async_session_factory,
+    async_session_maker,
+    engine,
+    get_db,
+)
 
 __all__ = [
     "AsyncSessionLocal",
@@ -10,6 +16,7 @@ __all__ = [
     "TimestampMixin",
     "UUIDPkMixin",
     "async_session_factory",
+    "async_session_maker",
     "engine",
     "get_db",
 ]
