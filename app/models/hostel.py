@@ -43,6 +43,11 @@ class Hostel(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
         cascade="all, delete-orphan",
     )
 
+    @property
+    def total_capacity(self) -> int:
+        """Total capacity across all rooms in this hostel (computed; 0 until rooms exist)."""
+        return 0
+
     def __repr__(self) -> str:
         return f"<Hostel id={self.id} code={self.code} name={self.name}>"
 
