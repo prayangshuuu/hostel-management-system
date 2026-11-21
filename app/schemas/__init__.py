@@ -30,6 +30,12 @@ from app.schemas.room import (
     RoomUpdate,
     RoomWithBedsRead,
 )
+from app.schemas.student import (
+    StudentCreate,
+    StudentCreatedResponse,
+    StudentProfileRead,
+    StudentUpdate,
+)
 from app.schemas.user import UserBase, UserCreate, UserRead, UserUpdate
 
 __all__ = [
@@ -55,6 +61,10 @@ __all__ = [
     "RoomType",
     "RoomUpdate",
     "RoomWithBedsRead",
+    "StudentCreate",
+    "StudentCreatedResponse",
+    "StudentProfileRead",
+    "StudentUpdate",
     "TokenResponse",
     "UserBase",
     "UserCreate",

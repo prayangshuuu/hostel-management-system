@@ -6,6 +6,7 @@ from app.repositories.hostel_repository import (
     WardenAssignmentRepository,
 )
 from app.repositories.room_repository import BedRepository, RoomRepository
+from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "BlockRepository",
     "HostelRepository",
     "RoomRepository",
+    "StudentRepository",
     "UserRepository",
     "WardenAssignmentRepository",
 ]

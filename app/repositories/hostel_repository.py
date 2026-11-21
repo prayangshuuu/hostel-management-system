@@ -193,3 +193,9 @@ class WardenAssignmentRepository:
         result = await self.session.execute(stmt)
         count = result.scalar() or 0
         return count > 0
+
+    async def list_hostel_ids_for_warden(self, user_id: UUID) -> list[UUID]:
+        """Fetch list of hostel IDs assigned to a warden."""
+        stmt = select(WardenAssignment.hostel_id).where(WardenAssignment.user_id == user_id)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
