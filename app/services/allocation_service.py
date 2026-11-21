@@ -228,7 +228,8 @@ class AllocationService:
             await self.room_repo.update(room)
 
         await self.allocation_repo.update(allocation)
-        return allocation
+        loaded = await self.allocation_repo.get_by_id(allocation.id)
+        return loaded or allocation
 
     async def transfer(
         self, allocation_id: UUID, data: AllocationTransferRequest, current_user: User
@@ -427,7 +428,8 @@ class AllocationService:
             await self.room_repo.update(room)
 
         await self.allocation_repo.update(allocation)
-        return allocation
+        loaded = await self.allocation_repo.get_by_id(allocation.id)
+        return loaded or allocation
 
     async def get_allocation(self, id: UUID, current_user: User) -> Allocation:
         """Retrieve allocation by ID with role-based scoping."""

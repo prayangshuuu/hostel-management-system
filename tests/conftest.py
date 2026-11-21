@@ -52,6 +52,33 @@ async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, N
 
 
 @pytest.fixture
+async def pg_session_factory() -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
+    """Provide an async session factory connected to Postgres for concurrency tests."""
+    from app.core.config import settings
+
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+    )
+    try:
+        async with engine.connect() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        await engine.dispose()
+        pytest.skip(f"PostgreSQL not reachable at {settings.DATABASE_URL}: {exc}")
+
+    factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    yield factory
+
+    await engine.dispose()
+
+
+@pytest.fixture
 async def client(test_engine: AsyncEngine) -> AsyncGenerator[AsyncClient, None]:
     """Async test client fixture for FastAPI application with test DB override."""
     app = create_app()
