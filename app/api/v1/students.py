@@ -14,6 +14,7 @@ from app.schemas.student import (
     StudentCreate,
     StudentCreatedResponse,
     StudentProfileRead,
+    StudentSelfUpdate,
     StudentUpdate,
 )
 from app.services.student_service import StudentService
@@ -65,6 +66,37 @@ async def list_students(
         has_allocation=has_allocation,
         search=search,
     )
+
+
+@router.get(
+    "/me",
+    response_model=StudentProfileRead,
+    summary="Get current student profile (student self-service)",
+)
+async def get_my_profile(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.STUDENT))],
+) -> StudentProfileRead:
+    """Retrieve profile of the currently authenticated student."""
+    service = StudentService(session)
+    profile = await service.get_my_profile(current_user=current_user)
+    return StudentProfileRead.model_validate(profile)
+
+
+@router.patch(
+    "/me",
+    response_model=StudentProfileRead,
+    summary="Update current student contact information (student self-service)",
+)
+async def update_my_profile(
+    body: StudentSelfUpdate,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.STUDENT))],
+) -> StudentProfileRead:
+    """Update contact info (phone, guardian phone, emergency contact) of authenticated student."""
+    service = StudentService(session)
+    profile = await service.update_my_profile(current_user=current_user, data=body)
+    return StudentProfileRead.model_validate(profile)
 
 
 @router.get(

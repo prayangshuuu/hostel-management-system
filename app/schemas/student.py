@@ -103,6 +103,22 @@ class StudentUpdate(BaseModel):
         return validate_phone_number(v)
 
 
+class StudentSelfUpdate(BaseModel):
+    """Payload for self-service profile update by student; extra fields forbidden."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    phone: str | None = None
+    emergency_contact: str | None = None
+    guardian_phone: str | None = None
+
+    @field_validator("phone", "guardian_phone", "emergency_contact", mode="before")
+    @classmethod
+    def check_phone(cls, v: str | None) -> str | None:
+        """Validate phone numbers if provided."""
+        return validate_phone_number(v)
+
+
 class StudentProfileRead(BaseModel):
     """Public student profile response schema with flattened user fields."""
 

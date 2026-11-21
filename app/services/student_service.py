@@ -19,6 +19,7 @@ from app.schemas.student import (
     StudentCreate,
     StudentCreatedResponse,
     StudentProfileRead,
+    StudentSelfUpdate,
     StudentUpdate,
 )
 
@@ -141,6 +142,35 @@ class StudentService:
         except Exception:
             await self.session.rollback()
             raise
+
+    async def get_my_profile(self, current_user: User) -> StudentProfile:
+        """Fetch profile for current student user."""
+        profile = await self.student_repo.get_by_user_id(current_user.id)
+        if profile is None:
+            raise NotFoundError("Student profile not found", code="PROFILE_NOT_FOUND")
+        return profile
+
+    async def update_my_profile(
+        self, current_user: User, data: StudentSelfUpdate
+    ) -> StudentProfile:
+        """Update contact fields only for the current student user."""
+        profile = await self.student_repo.get_by_user_id(current_user.id)
+        if profile is None:
+            raise NotFoundError("Student profile not found", code="PROFILE_NOT_FOUND")
+
+        update_data = data.model_dump(exclude_unset=True)
+        if "phone" in update_data:
+            current_user.phone = update_data["phone"]
+            await self.user_repo.update(current_user)
+
+        if "emergency_contact" in update_data:
+            profile.emergency_contact = update_data["emergency_contact"]
+        if "guardian_phone" in update_data:
+            profile.guardian_phone = update_data["guardian_phone"]
+
+        updated_profile = await self.student_repo.update(profile)
+        updated_profile.user = current_user
+        return updated_profile
 
     async def get_student(self, id: UUID, current_user: User) -> StudentProfile:
         """Fetch student profile enforcing role and ownership rules."""

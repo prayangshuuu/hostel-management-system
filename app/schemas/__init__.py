@@ -34,6 +34,7 @@ from app.schemas.student import (
     StudentCreate,
     StudentCreatedResponse,
     StudentProfileRead,
+    StudentSelfUpdate,
     StudentUpdate,
 )
 from app.schemas.user import UserBase, UserCreate, UserRead, UserUpdate
@@ -64,6 +65,7 @@ __all__ = [
     "StudentCreate",
     "StudentCreatedResponse",
     "StudentProfileRead",
+    "StudentSelfUpdate",
     "StudentUpdate",
     "TokenResponse",
     "UserBase",
