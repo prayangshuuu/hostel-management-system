@@ -47,7 +47,7 @@ uv run mypy app
 - [x] Health Check (`/api/v1/health`) ✅
 - [x] Authentication & Users (`/api/v1/auth`, `/api/v1/users`) ✅
 - [x] Hostels & Blocks (`/api/v1/hostels`, `/api/v1/blocks`) ✅
-- [ ] Rooms & Beds
+- [x] Rooms & Beds (`/api/v1/rooms`, `/api/v1/blocks/{id}/rooms`) ✅
 - [ ] Student Profiles
 - [ ] Allocations
 - [ ] Fee Structures & Invoices
