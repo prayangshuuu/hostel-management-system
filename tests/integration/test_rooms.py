@@ -119,6 +119,14 @@ async def test_room_crud_and_bed_generation(
     assert resp_beds.status_code == 200
     assert len(resp_beds.json()) == 2
 
+    # Student cannot update room -> 403
+    resp_student_update = await client.patch(
+        f"/api/v1/rooms/{room_id}",
+        json={"monthly_rent": "5000.00"},
+        headers=student_headers,
+    )
+    assert resp_student_update.status_code == 403
+
     # Update rent
     resp_patch = await client.patch(
         f"/api/v1/rooms/{room_id}",
@@ -137,6 +145,13 @@ async def test_room_crud_and_bed_generation(
     resp_avail = await client.post(f"/api/v1/rooms/{room_id}/available", headers=admin_headers)
     assert resp_avail.status_code == 200
     assert resp_avail.json()["status"] == "available"
+
+    # Student cannot delete room -> 403
+    resp_student_delete = await client.delete(
+        f"/api/v1/rooms/{room_id}",
+        headers=student_headers,
+    )
+    assert resp_student_delete.status_code == 403
 
     # Delete room -> 204
     resp_delete = await client.delete(f"/api/v1/rooms/{room_id}", headers=admin_headers)
