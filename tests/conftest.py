@@ -1,6 +1,7 @@
 """Pytest test configuration and fixtures."""
 
 from collections.abc import AsyncGenerator
+from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -12,9 +13,11 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import StaticPool
 
+from app.core.security import create_access_token, hash_password
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
+from app.models.user import User, UserRole
 
 
 @pytest.fixture
@@ -73,3 +76,111 @@ async def client(test_engine: AsyncEngine) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def admin_user(test_engine: AsyncEngine) -> User:
+    """Fixture creating an active administrator user in test DB."""
+    session_factory = async_sessionmaker(
+        bind=test_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    async with session_factory() as session:
+        user = User(
+            id=uuid4(),
+            email="admin@hostel.example.com",
+            full_name="System Administrator",
+            phone="+1000000000",
+            hashed_password=hash_password("AdminPass123"),
+            role=UserRole.ADMIN,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
+
+
+@pytest.fixture
+async def warden_user(test_engine: AsyncEngine) -> User:
+    """Fixture creating an active warden user in test DB."""
+    session_factory = async_sessionmaker(
+        bind=test_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    async with session_factory() as session:
+        user = User(
+            id=uuid4(),
+            email="warden@hostel.example.com",
+            full_name="Hostel Warden",
+            phone="+1111111111",
+            hashed_password=hash_password("WardenPass123"),
+            role=UserRole.WARDEN,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
+
+
+@pytest.fixture
+async def student_user(test_engine: AsyncEngine) -> User:
+    """Fixture creating an active student user in test DB."""
+    session_factory = async_sessionmaker(
+        bind=test_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    async with session_factory() as session:
+        user = User(
+            id=uuid4(),
+            email="student@hostel.example.com",
+            full_name="Hostel Student",
+            phone="+1222222222",
+            hashed_password=hash_password("StudentPass123"),
+            role=UserRole.STUDENT,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
+
+
+@pytest.fixture
+def admin_token(admin_user: User) -> str:
+    """Bearer access token for admin user."""
+    return create_access_token(user_id=admin_user.id, role="admin")
+
+
+@pytest.fixture
+def warden_token(warden_user: User) -> str:
+    """Bearer access token for warden user."""
+    return create_access_token(user_id=warden_user.id, role="warden")
+
+
+@pytest.fixture
+def student_token(student_user: User) -> str:
+    """Bearer access token for student user."""
+    return create_access_token(user_id=student_user.id, role="student")
+
+
+@pytest.fixture
+def admin_headers(admin_token: str) -> dict[str, str]:
+    """Authorization headers for admin user."""
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+def warden_headers(warden_token: str) -> dict[str, str]:
+    """Authorization headers for warden user."""
+    return {"Authorization": f"Bearer {warden_token}"}
+
+
+@pytest.fixture
+def student_headers(student_token: str) -> dict[str, str]:
+    """Authorization headers for student user."""
+    return {"Authorization": f"Bearer {student_token}"}

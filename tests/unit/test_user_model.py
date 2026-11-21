@@ -61,7 +61,7 @@ async def test_user_crud_in_memory() -> None:
             email="warden@hostel.example.com",
             full_name="John Doe",
             phone="+1234567890",
-            hashed_password="hashed_placeholder_pw",  # noqa: S106
+            hashed_password="hashed_placeholder_pw",
             role=UserRole.WARDEN,
         )
         session.add(user)
