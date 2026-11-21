@@ -1,12 +1,14 @@
 """Room and Bed API endpoints."""
 
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_user, get_db
+from app.models.room import RoomType
 from app.models.user import User
 from app.schemas.common import Page, PaginationParams
 from app.schemas.room import (
@@ -19,6 +21,31 @@ from app.schemas.room import (
 from app.services.room_service import RoomService
 
 router = APIRouter(tags=["rooms"])
+
+
+@router.get(
+    "/rooms/available",
+    response_model=Page[RoomRead],
+    summary="Search available rooms (authenticated)",
+)
+async def search_available_rooms(
+    params: Annotated[PaginationParams, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    hostel_id: Annotated[UUID | None, Query(description="Filter by hostel ID")] = None,
+    room_type: Annotated[RoomType | None, Query(description="Filter by room type")] = None,
+    floor: Annotated[int | None, Query(description="Filter by floor number")] = None,
+    max_rent: Annotated[Decimal | None, Query(description="Maximum monthly rent")] = None,
+) -> Page[RoomRead]:
+    """Retrieve paginated list of available rooms matching optional search criteria."""
+    service = RoomService(session)
+    return await service.search_available_rooms(
+        hostel_id=hostel_id,
+        room_type=room_type,
+        floor=floor,
+        max_rent=max_rent,
+        params=params,
+    )
 
 
 @router.post(

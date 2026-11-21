@@ -1,5 +1,6 @@
 """Room and Bed repositories for persistence operations."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -7,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.hostel import Block
-from app.models.room import Bed, Room
+from app.models.room import Bed, Room, RoomStatus, RoomType
 from app.schemas.common import PaginationParams
 
 
@@ -123,6 +124,60 @@ class RoomRepository:
         total = total_result.scalar() or 0
 
         stmt = stmt.order_by(Room.number.asc()).offset(params.offset).limit(params.limit)
+        items_result = await self.session.execute(stmt)
+        rooms = list(items_result.scalars().all())
+
+        return rooms, total
+
+    async def search_available(
+        self,
+        hostel_id: UUID | None = None,
+        room_type: RoomType | None = None,
+        floor: int | None = None,
+        max_rent: Decimal | None = None,
+        params: PaginationParams | None = None,
+    ) -> tuple[list[Room], int]:
+        """Search available rooms (not deleted, not maintenance, >=1 free bed)."""
+        stmt = (
+            select(Room)
+            .options(selectinload(Room.beds))
+            .where(
+                Room.is_deleted.is_(False),
+                Room.status != RoomStatus.MAINTENANCE,
+                Room.beds.any(Bed.is_occupied.is_(False)),
+            )
+        )
+        count_stmt = select(func.count(Room.id)).where(
+            Room.is_deleted.is_(False),
+            Room.status != RoomStatus.MAINTENANCE,
+            Room.beds.any(Bed.is_occupied.is_(False)),
+        )
+
+        if hostel_id is not None:
+            stmt = stmt.join(Block, Room.block_id == Block.id).where(Block.hostel_id == hostel_id)
+            count_stmt = count_stmt.join(Block, Room.block_id == Block.id).where(
+                Block.hostel_id == hostel_id
+            )
+
+        if room_type is not None:
+            stmt = stmt.where(Room.room_type == room_type)
+            count_stmt = count_stmt.where(Room.room_type == room_type)
+
+        if floor is not None:
+            stmt = stmt.where(Room.floor == floor)
+            count_stmt = count_stmt.where(Room.floor == floor)
+
+        if max_rent is not None:
+            stmt = stmt.where(Room.monthly_rent <= max_rent)
+            count_stmt = count_stmt.where(Room.monthly_rent <= max_rent)
+
+        total_result = await self.session.execute(count_stmt)
+        total = total_result.scalar() or 0
+
+        stmt = stmt.order_by(Room.created_at.desc())
+        if params is not None:
+            stmt = stmt.offset(params.offset).limit(params.limit)
+
         items_result = await self.session.execute(stmt)
         rooms = list(items_result.scalars().all())
 

@@ -1,5 +1,6 @@
 """Room and Bed domain service managing lifecycle, capacity, and bed allocations."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from app.core.exceptions import (
     ConflictError,
     NotFoundError,
 )
-from app.models.room import Bed, Room, RoomStatus
+from app.models.room import Bed, Room, RoomStatus, RoomType
 from app.models.user import User
 from app.repositories.hostel_repository import BlockRepository
 from app.repositories.room_repository import BedRepository, RoomRepository
@@ -208,6 +209,26 @@ class RoomService:
         """List all beds in a room, ensuring hostel access."""
         room = await self.get_room(room_id, current_user)
         return await self.bed_repo.list_by_room(room.id)
+
+    async def search_available_rooms(
+        self,
+        hostel_id: UUID | None = None,
+        room_type: RoomType | None = None,
+        floor: int | None = None,
+        max_rent: Decimal | None = None,
+        params: PaginationParams | None = None,
+    ) -> Page[RoomRead]:
+        """Search available rooms across hostels open to all authenticated users."""
+        pagination = params or PaginationParams(page=1, size=20)
+        rooms, total = await self.room_repo.search_available(
+            hostel_id=hostel_id,
+            room_type=room_type,
+            floor=floor,
+            max_rent=max_rent,
+            params=pagination,
+        )
+        items = [RoomRead.model_validate(r) for r in rooms]
+        return Page.create(items=items, total=total, params=pagination)
 
 
 __all__ = [
