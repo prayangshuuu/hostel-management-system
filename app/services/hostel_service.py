@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationAppError
 from app.models.hostel import Block, GenderType, Hostel, WardenAssignment
 from app.models.user import User, UserRole
+from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.hostel_repository import (
     BlockRepository,
     HostelRepository,
@@ -35,6 +36,7 @@ class HostelService:
         warden_repo: WardenAssignmentRepository | None = None,
         user_repo: UserRepository | None = None,
         room_repo: RoomRepository | None = None,
+        allocation_repo: AllocationRepository | None = None,
     ) -> None:
         self.session = session
         self.hostel_repo = hostel_repo or HostelRepository(session)
@@ -42,6 +44,7 @@ class HostelService:
         self.warden_repo = warden_repo or WardenAssignmentRepository(session)
         self.user_repo = user_repo or UserRepository(session)
         self.room_repo = room_repo or RoomRepository(session)
+        self.allocation_repo = allocation_repo or AllocationRepository(session)
 
     async def ensure_hostel_access(self, user: User, hostel_id: UUID) -> bool:
         """Enforce access rules: admin passes, warden must be assigned, others forbidden."""
@@ -56,8 +59,12 @@ class HostelService:
         raise ForbiddenError("Insufficient permissions to access hostel", code="FORBIDDEN")
 
     async def _ensure_can_delete_hostel(self, hostel_id: UUID) -> None:
-        """Guard hook to prevent deleting hostels with active allocations (PROMPT_7)."""
-        return None
+        """Guard hook to prevent deleting hostels with active allocations."""
+        if await self.allocation_repo.has_active_allocations_for_hostel(hostel_id):
+            raise ConflictError(
+                "Cannot delete hostel with active allocations",
+                code="HOSTEL_HAS_ACTIVE_ALLOCATIONS",
+            )
 
     async def create_hostel(self, data: HostelCreate) -> Hostel:
         """Create a new hostel ensuring unique code constraint."""

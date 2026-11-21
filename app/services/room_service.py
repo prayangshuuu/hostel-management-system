@@ -12,6 +12,7 @@ from app.core.exceptions import (
 )
 from app.models.room import Bed, Room, RoomStatus, RoomType
 from app.models.user import User
+from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.hostel_repository import BlockRepository
 from app.repositories.room_repository import BedRepository, RoomRepository
 from app.schemas.common import Page, PaginationParams
@@ -57,11 +58,13 @@ class RoomService:
         room_repo: RoomRepository | None = None,
         bed_repo: BedRepository | None = None,
         block_repo: BlockRepository | None = None,
+        allocation_repo: AllocationRepository | None = None,
     ) -> None:
         self.session = session
         self.room_repo = room_repo or RoomRepository(session)
         self.bed_repo = bed_repo or BedRepository(session)
         self.block_repo = block_repo or BlockRepository(session)
+        self.allocation_repo = allocation_repo or AllocationRepository(session)
 
     @staticmethod
     def recalculate_status(room: Room) -> RoomStatus:
@@ -177,6 +180,11 @@ class RoomService:
     async def delete_room(self, room_id: UUID, current_user: User) -> Room:
         """Soft delete a room."""
         room = await self.get_room(room_id, current_user)
+        if await self.allocation_repo.has_active_allocations_for_room(room_id):
+            raise ConflictError(
+                "Cannot delete room with active allocations",
+                code="ROOM_HAS_ACTIVE_ALLOCATIONS",
+            )
         return await self.room_repo.soft_delete(room)
 
     async def get_room(self, room_id: UUID, current_user: User) -> Room:
