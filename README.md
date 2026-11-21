@@ -35,6 +35,9 @@ Interactive documentation is available at `http://127.0.0.1:8000/docs`.
 # Run test suite with coverage
 uv run pytest -q --cov=app
 
+# Run PostgreSQL-only tests (requires Docker Postgres)
+uv run pytest -m postgres
+
 # Run linter and formatter
 uv run ruff check . --fix && uv run ruff format .
 
@@ -49,7 +52,7 @@ uv run mypy app
 - [x] Hostels & Blocks (`/api/v1/hostels`, `/api/v1/blocks`) ✅
 - [x] Rooms & Beds (`/api/v1/rooms`, `/api/v1/blocks/{id}/rooms`) ✅
 - [x] Student Profiles (`/api/v1/students`, `/api/v1/students/me`) ✅
-- [ ] Allocations
+- [x] Allocations (`/api/v1/allocations`, `/api/v1/rooms/{id}/occupants`) ✅
 - [ ] Fee Structures & Invoices
 - [ ] Payments
 - [ ] Attendance
