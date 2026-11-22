@@ -14,6 +14,7 @@ from app.models.hostel import GenderType
 if TYPE_CHECKING:
     from app.models.allocation import Allocation
     from app.models.billing import Invoice
+    from app.models.operations import AttendanceLog, LeaveRequest, Visitor
     from app.models.user import User
 
 
@@ -72,6 +73,21 @@ class StudentProfile(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
     invoices: Mapped[list[Invoice]] = relationship(
         "Invoice",
         back_populates="student",
+    )
+    attendance_logs: Mapped[list[AttendanceLog]] = relationship(
+        "AttendanceLog",
+        back_populates="student",
+        cascade="all, delete-orphan",
+    )
+    leave_requests: Mapped[list[LeaveRequest]] = relationship(
+        "LeaveRequest",
+        back_populates="student",
+        cascade="all, delete-orphan",
+    )
+    visitors: Mapped[list[Visitor]] = relationship(
+        "Visitor",
+        back_populates="student",
+        cascade="all, delete-orphan",
     )
 
     @property

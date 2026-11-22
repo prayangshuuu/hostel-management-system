@@ -10,6 +10,13 @@ from app.models.billing import (
     PaymentMethod,
 )
 from app.models.hostel import Block, GenderType, Hostel, WardenAssignment
+from app.models.operations import (
+    AttendanceLog,
+    AttendanceType,
+    LeaveRequest,
+    LeaveStatus,
+    Visitor,
+)
 from app.models.room import Bed, Room, RoomStatus, RoomType
 from app.models.student import StudentProfile
 from app.models.user import User, UserRole
@@ -17,6 +24,8 @@ from app.models.user import User, UserRole
 __all__ = [
     "Allocation",
     "AllocationStatus",
+    "AttendanceLog",
+    "AttendanceType",
     "Bed",
     "Block",
     "FeePeriod",
@@ -25,6 +34,8 @@ __all__ = [
     "Hostel",
     "Invoice",
     "InvoiceStatus",
+    "LeaveRequest",
+    "LeaveStatus",
     "Payment",
     "PaymentMethod",
     "Room",
@@ -33,5 +44,6 @@ __all__ = [
     "StudentProfile",
     "User",
     "UserRole",
+    "Visitor",
     "WardenAssignment",
 ]
