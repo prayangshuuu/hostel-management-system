@@ -141,6 +141,20 @@ async def generate_invoices(
     )
 
 
+@router.post(
+    "/invoices/mark-overdue",
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+    summary="Mark past-due unpaid invoices as overdue (admin only)",
+)
+async def mark_overdue_invoices(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, int]:
+    """Transition past-due unpaid and partial invoices to overdue status."""
+    service = BillingService(session)
+    count = await service.mark_overdue()
+    return {"updated_count": count}
+
+
 @router.get(
     "/invoices",
     response_model=Page[InvoiceRead],

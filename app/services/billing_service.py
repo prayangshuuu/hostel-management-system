@@ -357,6 +357,17 @@ class BillingService:
         await self.invoice_repo.update(invoice)
         return created_payment
 
+    async def mark_overdue(self, today: date | None = None) -> int:
+        """Transition past-due unpaid/partial invoices to OVERDUE status."""
+        check_date = today or date.today()
+        invoices = await self.invoice_repo.get_unpaid_or_partial_past_due(check_date)
+        count = 0
+        for inv in invoices:
+            inv.status = InvoiceStatus.OVERDUE
+            await self.invoice_repo.update(inv)
+            count += 1
+        return count
+
     async def get_student_balance(self, student_id: UUID) -> StudentBalanceRead:
         """Calculate aggregated billing totals and overdue amount for a student."""
         invoices = await self.invoice_repo.get_student_invoices(student_id)

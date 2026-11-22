@@ -243,6 +243,19 @@ class InvoiceRepository:
 
         return invoices, total
 
+    async def get_unpaid_or_partial_past_due(self, today: date) -> builtins.list[Invoice]:
+        """Fetch invoices with status UNPAID or PARTIAL where due_date < today."""
+        stmt = (
+            select(Invoice)
+            .where(
+                Invoice.status.in_([InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL]),
+                Invoice.due_date < today,
+            )
+            .order_by(Invoice.due_date.asc())
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def get_student_invoices(self, student_id: UUID) -> builtins.list[Invoice]:
         """Fetch all invoices for a given student profile."""
         stmt = (
