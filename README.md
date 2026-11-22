@@ -24,9 +24,21 @@ uv run alembic upgrade head
 # Create first admin user
 uv run python scripts/create_admin.py --email admin@example.com --password AdminPassword123 --name "System Admin"
 
+# Seed realistic demo data (Hostels, Rooms, Students, Allocations, Invoices, Attendance, Complaints)
+uv run python scripts/seed.py --reset
+
 # Run development server
 uv run uvicorn app.main:app --reload
 ```
+
+### Demo Login Credentials
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@hostel.example.com` | `AdminPass123` |
+| Warden (Boys) | `warden.boys@hostel.example.com` | `WardenPass123` |
+| Warden (Girls) | `warden.girls@hostel.example.com` | `WardenPass123` |
+| Student (Male) | `student.b001@hostel.example.com` | `StudentPass123` |
+| Student (Female) | `student.g001@hostel.example.com` | `StudentPass123` |
 
 Interactive documentation is available at `http://127.0.0.1:8000/docs`.
 
@@ -59,7 +71,7 @@ uv run mypy app
 - [x] Mess (`/api/v1/hostels/{id}/menu`, `/api/v1/meals/opt-outs`, `/api/v1/meals/headcount`) ✅
 - [x] Notices (`/api/v1/notices`, `/api/v1/notices/unread-count`) ✅
 - [x] Audit Log (`/api/v1/audit-logs`) ✅
-- [ ] Reports
+- [x] Reports & Dashboard (`/api/v1/dashboard/summary`, `/api/v1/reports/*`, `/api/v1/students/me/dashboard`) ✅
 
 ## Environment Variables
 | Variable | Description | Default |
