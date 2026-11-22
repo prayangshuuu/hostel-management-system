@@ -2,6 +2,7 @@
 
 from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.audit_repository import AuditLogRepository
+from app.repositories.auth_repository import RefreshTokenRepository
 from app.repositories.billing_repository import (
     FeeStructureRepository,
     InvoiceRepository,
@@ -66,6 +67,7 @@ __all__ = [
     "NoticeRepository",
     "OccupancyReportRow",
     "PaymentRepository",
+    "RefreshTokenRepository",
     "ReportRepository",
     "RevenueReportRow",
     "RoomRepository",

@@ -71,19 +71,24 @@ def create_refresh_token(
     user_id: UUID,
     role: str,
     expires_delta: timedelta | None = None,
+    jti: str | None = None,
+    family_id: UUID | None = None,
 ) -> str:
-    """Generate a signed JWT refresh token."""
+    """Generate a signed JWT refresh token with jti and family_id claims."""
     now = datetime.now(UTC)
     expires = now + (
         expires_delta
         if expires_delta is not None
         else timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
+    token_jti = jti if jti is not None else uuid4().hex
+    token_family_id = family_id if family_id is not None else uuid4()
     payload: dict[str, Any] = {
         "sub": str(user_id),
         "role": role,
         "type": "refresh",
-        "jti": uuid4().hex,
+        "jti": token_jti,
+        "family_id": str(token_family_id),
         "iat": int(now.timestamp()),
         "exp": int(expires.timestamp()),
     }

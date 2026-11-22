@@ -12,6 +12,7 @@ from app.schemas.audit import AuditLogRead
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
+    LogoutRequest,
     RefreshTokenRequest,
     TokenResponse,
 )
@@ -168,6 +169,7 @@ __all__ = [
     "LeaveReviewRequest",
     "LeaveStatus",
     "LoginRequest",
+    "LogoutRequest",
     "MealHeadcountItem",
     "MealOptOutCreate",
     "MealOptOutRead",

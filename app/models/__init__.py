@@ -2,6 +2,7 @@
 
 from app.models.allocation import Allocation, AllocationStatus
 from app.models.audit import AuditLog
+from app.models.auth import RefreshToken
 from app.models.billing import (
     FeePeriod,
     FeeStructure,
@@ -60,6 +61,7 @@ __all__ = [
     "NoticeRead",
     "Payment",
     "PaymentMethod",
+    "RefreshToken",
     "Room",
     "RoomStatus",
     "RoomType",

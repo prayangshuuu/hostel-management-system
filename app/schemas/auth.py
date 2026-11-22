@@ -34,6 +34,14 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class LogoutRequest(BaseModel):
+    """Payload to logout and revoke refresh token family."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    refresh_token: str | None = None
+
+
 class ChangePasswordRequest(BaseModel):
     """Password rotation payload requiring verification of current password."""
 
