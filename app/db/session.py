@@ -1,6 +1,7 @@
 """Database session and async engine configuration."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -10,10 +11,17 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
+engine_kwargs: dict[str, Any] = {
+    "echo": settings.DEBUG,
+    "pool_pre_ping": settings.DB_POOL_PRE_PING,
+}
+if not settings.DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+    engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,
-    echo=settings.DEBUG,
+    **engine_kwargs,
 )
 
 AsyncSessionLocal = async_sessionmaker(
