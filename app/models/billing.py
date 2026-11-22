@@ -166,6 +166,11 @@ class Invoice(Base, UUIDPkMixin, TimestampMixin):
         order_by="Payment.paid_at",
     )
 
+    @property
+    def balance(self) -> Decimal:
+        """Remaining unpaid balance on this invoice."""
+        return self.amount - self.paid_amount
+
     def __repr__(self) -> str:
         return (
             f"<Invoice id={self.id} student_id={self.student_id} "

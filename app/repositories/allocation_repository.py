@@ -4,7 +4,7 @@ import builtins
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.base import ExecutableOption
@@ -81,6 +81,27 @@ class AllocationRepository:
         result = await self.session.execute(stmt)
         count = result.scalar() or 0
         return count > 0
+
+    async def get_overlapping_for_hostel(
+        self, hostel_id: UUID, period_start: date, period_end: date
+    ) -> builtins.list[Allocation]:
+        """Fetch allocations in a hostel overlapping the given date range."""
+        stmt = (
+            select(Allocation)
+            .options(*self._eager_load_options())
+            .join(Bed, Allocation.bed_id == Bed.id)
+            .join(Room, Bed.room_id == Room.id)
+            .join(Block, Room.block_id == Block.id)
+            .where(
+                Block.hostel_id == hostel_id,
+                Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.ENDED]),
+                Allocation.start_date <= period_end,
+                or_(Allocation.end_date.is_(None), Allocation.end_date >= period_start),
+            )
+            .order_by(Allocation.start_date.asc())
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def has_active_allocations_for_room(self, room_id: UUID) -> bool:
         """Check if any active allocation exists for the given room."""
