@@ -80,6 +80,30 @@ uv run mypy app
 - [x] Audit Log (`/api/v1/audit-logs`) ✅
 - [x] Reports & Dashboard (`/api/v1/dashboard/summary`, `/api/v1/reports/*`, `/api/v1/students/me/dashboard`) ✅
 - [x] Test Hardening & Bug Hunt Sweep (96% Coverage, Permission Matrix, Property Testing, E2E Scenarios, N+1 Query Elimination, Reversible Migrations) ✅
+- [x] Security & Performance Hardening (Rate limiting, Account lockout, Refresh token rotation/revocation, Security headers, DB indexes, GZip, Load testing) ✅
+
+## Security
+
+| Feature | Detail |
+|---|---|
+| Rate Limiting | `5/min` per IP+email on `/auth/login`; `100/min` global default (slowapi) |
+| Account Lockout | 5 consecutive failures → 15-minute lockout; auto-unlocks on cooldown |
+| Refresh Token Rotation | Every refresh issues new token pair; reuse of rotated token revokes entire family (theft detection) |
+| Logout | `POST /api/v1/auth/logout` — revokes token family immediately |
+| Security Headers | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, HSTS in production |
+| Secret Key | Must be ≥32 chars and non-default in `production` (enforced at startup) |
+| Docs | `/docs` and `/redoc` disabled in production unless `ENABLE_DOCS=true` |
+| Body Limit | 5 MB maximum request body enforced by middleware |
+
+### Critical Production Variables
+
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | **Must be ≥32 chars, non-default** — rejected on startup otherwise |
+| `APP_ENV` | Set to `production` to enable HSTS, disable docs, enforce key validation |
+| `ENABLE_DOCS` | Set to `true` to re-enable `/docs`/`/redoc` in production |
+| `FAILED_LOGIN_LIMIT` | Max consecutive failed logins before account lockout (default: `5`) |
+| `LOCKOUT_DURATION_MINUTES` | Account lockout duration in minutes (default: `15`) |
 
 ## Environment Variables
 | Variable | Description | Default |
