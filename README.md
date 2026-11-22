@@ -57,8 +57,9 @@ uv run mypy app
 - [x] Attendance, Leave, Visitors (`/api/v1/attendance`, `/api/v1/leaves`, `/api/v1/visitors`) ✅
 - [x] Complaints (`/api/v1/complaints`) ✅
 - [x] Mess (`/api/v1/hostels/{id}/menu`, `/api/v1/meals/opt-outs`, `/api/v1/meals/headcount`) ✅
-- [ ] Notices
-- [ ] Audit Logs & Reports
+- [x] Notices (`/api/v1/notices`, `/api/v1/notices/unread-count`) ✅
+- [x] Audit Log (`/api/v1/audit-logs`) ✅
+- [ ] Reports
 
 ## Environment Variables
 | Variable | Description | Default |
