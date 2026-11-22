@@ -10,6 +10,7 @@ from app.api.deps import get_current_active_user, get_db, require_role
 from app.models.hostel import GenderType
 from app.models.user import User, UserRole
 from app.schemas.common import Page, PaginationParams
+from app.schemas.report import StudentDashboardRead, StudentRoomInfoRead
 from app.schemas.student import (
     StudentCreate,
     StudentCreatedResponse,
@@ -17,6 +18,7 @@ from app.schemas.student import (
     StudentSelfUpdate,
     StudentUpdate,
 )
+from app.services.report_service import ReportService
 from app.services.student_service import StudentService
 
 router = APIRouter(prefix="/students", tags=["students"])
@@ -97,6 +99,38 @@ async def update_my_profile(
     service = StudentService(session)
     profile = await service.update_my_profile(current_user=current_user, data=body)
     return StudentProfileRead.model_validate(profile)
+
+
+@router.get(
+    "/me/dashboard",
+    response_model=StudentDashboardRead,
+    summary="Get current student dashboard metrics (student self-service)",
+)
+async def get_my_dashboard(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.STUDENT))],
+) -> StudentDashboardRead:
+    """Retrieve personal room, roommates, balance, unread notices, and open complaints."""
+    service = ReportService(session)
+    data = await service.get_student_dashboard(current_user=current_user)
+    return StudentDashboardRead(
+        room=StudentRoomInfoRead(
+            room_id=data.room.room_id,
+            room_number=data.room.room_number,
+            block_name=data.room.block_name,
+            hostel_name=data.room.hostel_name,
+            bed_label=data.room.bed_label,
+        )
+        if data.room
+        else None,
+        room_number=data.room.room_number if data.room else None,
+        block_name=data.room.block_name if data.room else None,
+        hostel_name=data.room.hostel_name if data.room else None,
+        roommates=data.roommates,
+        balance=data.balance,
+        unread_notices_count=data.unread_notices_count,
+        open_complaints_count=data.open_complaints_count,
+    )
 
 
 @router.get(
