@@ -2,6 +2,10 @@
 
 FastAPI backend REST API for managing university and private hostels.
 
+![Coverage](https://img.shields.io/badge/Coverage-96%25-brightgreen.svg)
+![Services Coverage](https://img.shields.io/badge/Services_Coverage-99%25-brightgreen.svg)
+![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
+
 ## Tech Stack
 - Python 3.12
 - FastAPI
@@ -44,11 +48,14 @@ Interactive documentation is available at `http://127.0.0.1:8000/docs`.
 
 ## Run Tests & Linting
 ```bash
-# Run test suite with coverage
-uv run pytest -q --cov=app
+# Run test suite with strict coverage enforcement and randomized execution
+uv run pytest -q -W error --cov=app --cov-fail-under=90 -p randomly
 
-# Run PostgreSQL-only tests (requires Docker Postgres)
-uv run pytest -m postgres
+# Run full test suite against PostgreSQL (Docker container)
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/hostel_db uv run pytest -q
+
+# Run PostgreSQL-only migration reversibility tests
+uv run pytest tests/integration/test_migrations.py -v
 
 # Run linter and formatter
 uv run ruff check . --fix && uv run ruff format .
@@ -72,6 +79,7 @@ uv run mypy app
 - [x] Notices (`/api/v1/notices`, `/api/v1/notices/unread-count`) ✅
 - [x] Audit Log (`/api/v1/audit-logs`) ✅
 - [x] Reports & Dashboard (`/api/v1/dashboard/summary`, `/api/v1/reports/*`, `/api/v1/students/me/dashboard`) ✅
+- [x] Test Hardening & Bug Hunt Sweep (96% Coverage, Permission Matrix, Property Testing, E2E Scenarios, N+1 Query Elimination, Reversible Migrations) ✅
 
 ## Environment Variables
 | Variable | Description | Default |
