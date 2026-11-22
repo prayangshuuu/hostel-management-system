@@ -67,6 +67,13 @@ from app.schemas.mess import (
     MessMenuItemRead,
     WeeklyMenuRead,
 )
+from app.schemas.notice import (
+    NoticeAudience,
+    NoticeCreate,
+    NoticeRead,
+    NoticeUnreadCount,
+    NoticeUpdate,
+)
 from app.schemas.operations import (
     AttendanceActionRequest,
     AttendanceRead,
@@ -152,6 +159,11 @@ __all__ = [
     "MessMenuBulkUpdateRequest",
     "MessMenuItemCreate",
     "MessMenuItemRead",
+    "NoticeAudience",
+    "NoticeCreate",
+    "NoticeRead",
+    "NoticeUnreadCount",
+    "NoticeUpdate",
     "OccupantRead",
     "Page",
     "PaginationParams",

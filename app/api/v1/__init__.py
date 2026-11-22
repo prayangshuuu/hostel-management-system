@@ -12,6 +12,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.hostels import router as hostels_router
 from app.api.v1.leaves import router as leaves_router
 from app.api.v1.mess import router as mess_router
+from app.api.v1.notices import router as notices_router
 from app.api.v1.rooms import router as rooms_router
 from app.api.v1.students import router as students_router
 from app.api.v1.users import router as users_router
@@ -32,5 +33,6 @@ api_router.include_router(attendance_router)
 api_router.include_router(leaves_router)
 api_router.include_router(visitors_router)
 api_router.include_router(mess_router)
+api_router.include_router(notices_router)
 
 __all__ = ["api_router"]

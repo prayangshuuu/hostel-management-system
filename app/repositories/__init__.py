@@ -19,6 +19,10 @@ from app.repositories.mess_repository import (
     MealOptOutRepository,
     MessMenuRepository,
 )
+from app.repositories.notice_repository import (
+    NoticeReadRepository,
+    NoticeRepository,
+)
 from app.repositories.operations_repository import (
     AttendanceRepository,
     LeaveRepository,
@@ -41,6 +45,8 @@ __all__ = [
     "LeaveRepository",
     "MealOptOutRepository",
     "MessMenuRepository",
+    "NoticeReadRepository",
+    "NoticeRepository",
     "PaymentRepository",
     "RoomRepository",
     "StudentRepository",
