@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
 from app.models.allocation import Allocation
@@ -88,12 +88,12 @@ class InvoiceRepository:
     def _eager_load_options(self, load_payments: bool = True) -> builtins.list[ExecutableOption]:
         """Return eager loading options for related entities."""
         options: builtins.list[ExecutableOption] = [
-            selectinload(Invoice.student).selectinload(StudentProfile.user),
-            selectinload(Invoice.allocation)
-            .selectinload(Allocation.bed)
-            .selectinload(Bed.room)
-            .selectinload(Room.block)
-            .selectinload(Block.hostel),
+            joinedload(Invoice.student).joinedload(StudentProfile.user),
+            joinedload(Invoice.allocation)
+            .joinedload(Allocation.bed)
+            .joinedload(Bed.room)
+            .joinedload(Room.block)
+            .joinedload(Block.hostel),
         ]
         if load_payments:
             options.append(selectinload(Invoice.payments))

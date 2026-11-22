@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.hostel import Block
+from app.models.hostel import Block, Hostel
 from app.models.room import Bed, Room, RoomStatus, RoomType
 from app.schemas.common import PaginationParams
 
@@ -141,23 +141,30 @@ class RoomRepository:
         stmt = (
             select(Room)
             .options(selectinload(Room.beds))
+            .join(Block, Room.block_id == Block.id)
+            .join(Hostel, Block.hostel_id == Hostel.id)
             .where(
                 Room.is_deleted.is_(False),
+                Hostel.is_deleted.is_(False),
                 Room.status != RoomStatus.MAINTENANCE,
                 Room.beds.any(Bed.is_occupied.is_(False)),
             )
         )
-        count_stmt = select(func.count(Room.id)).where(
-            Room.is_deleted.is_(False),
-            Room.status != RoomStatus.MAINTENANCE,
-            Room.beds.any(Bed.is_occupied.is_(False)),
+        count_stmt = (
+            select(func.count(Room.id))
+            .join(Block, Room.block_id == Block.id)
+            .join(Hostel, Block.hostel_id == Hostel.id)
+            .where(
+                Room.is_deleted.is_(False),
+                Hostel.is_deleted.is_(False),
+                Room.status != RoomStatus.MAINTENANCE,
+                Room.beds.any(Bed.is_occupied.is_(False)),
+            )
         )
 
         if hostel_id is not None:
-            stmt = stmt.join(Block, Room.block_id == Block.id).where(Block.hostel_id == hostel_id)
-            count_stmt = count_stmt.join(Block, Room.block_id == Block.id).where(
-                Block.hostel_id == hostel_id
-            )
+            stmt = stmt.where(Block.hostel_id == hostel_id)
+            count_stmt = count_stmt.where(Block.hostel_id == hostel_id)
 
         if room_type is not None:
             stmt = stmt.where(Room.room_type == room_type)
@@ -196,6 +203,23 @@ class RoomRepository:
         )
         result = await self.session.execute(stmt)
         return int(result.scalar() or 0)
+
+    async def get_total_capacities_for_hostels(self, hostel_ids: list[UUID]) -> dict[UUID, int]:
+        """Compute sum of capacities for active non-deleted rooms grouped by hostel_id."""
+        if not hostel_ids:
+            return {}
+        stmt = (
+            select(Block.hostel_id, func.coalesce(func.sum(Room.capacity), 0))
+            .select_from(Room)
+            .join(Block, Room.block_id == Block.id)
+            .where(
+                Block.hostel_id.in_(hostel_ids),
+                Room.is_deleted.is_(False),
+            )
+            .group_by(Block.hostel_id)
+        )
+        result = await self.session.execute(stmt)
+        return {row[0]: int(row[1]) for row in result.all()}
 
 
 class BedRepository:

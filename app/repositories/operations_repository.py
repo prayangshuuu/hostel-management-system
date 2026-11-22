@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
 from app.models.allocation import Allocation, AllocationStatus
@@ -188,6 +188,8 @@ class AttendanceRepository:
             .join(Hostel, Hostel.id == Block.hostel_id)
             .where(subq.c.type == AttendanceType.CHECK_IN)
             .where(StudentProfile.is_deleted.is_(False))
+            .where(Hostel.is_deleted.is_(False))
+            .where(Room.is_deleted.is_(False))
         )
 
         if hostel_id is not None:
@@ -351,7 +353,7 @@ class VisitorRepository:
     def _eager_load_options(self) -> builtins.list[ExecutableOption]:
         """Return eager loading options for student and user."""
         return [
-            selectinload(Visitor.student).selectinload(StudentProfile.user),
+            joinedload(Visitor.student).joinedload(StudentProfile.user),
         ]
 
     async def get_by_id(self, id: UUID) -> Visitor | None:

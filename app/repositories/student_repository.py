@@ -5,7 +5,7 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.db.base import Base
 from app.models.hostel import GenderType
@@ -94,7 +94,7 @@ class StudentRepository:
         stmt = (
             select(StudentProfile)
             .join(StudentProfile.user)
-            .options(selectinload(StudentProfile.user))
+            .options(joinedload(StudentProfile.user))
             .where(StudentProfile.is_deleted.is_(False))
         )
         count_stmt = (

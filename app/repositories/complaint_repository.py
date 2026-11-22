@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
 from app.models.complaint import (
@@ -36,12 +36,12 @@ class ComplaintRepository:
     def _eager_load_options(self, load_comments: bool = True) -> list[ExecutableOption]:
         """Return eager loading options for student, room, block, hostel, assignee, and comments."""
         options: list[ExecutableOption] = [
-            selectinload(Complaint.student).selectinload(StudentProfile.user),
-            selectinload(Complaint.room).selectinload(Room.block).selectinload(Block.hostel),
-            selectinload(Complaint.assignee),
+            joinedload(Complaint.student).joinedload(StudentProfile.user),
+            joinedload(Complaint.room).joinedload(Room.block).joinedload(Block.hostel),
+            joinedload(Complaint.assignee),
         ]
         if load_comments:
-            options.append(selectinload(Complaint.comments).selectinload(ComplaintComment.author))
+            options.append(selectinload(Complaint.comments).joinedload(ComplaintComment.author))
         return options
 
     async def get_by_id(self, id: UUID, load_comments: bool = True) -> Complaint | None:

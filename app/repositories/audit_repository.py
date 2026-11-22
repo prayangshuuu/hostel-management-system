@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.models.audit import AuditLog
 from app.schemas.common import PaginationParams
@@ -41,7 +41,7 @@ class AuditLogRepository:
         date_to: datetime | None = None,
     ) -> tuple[list[AuditLog], int]:
         """Fetch paginated audit log entries matching optional filters."""
-        stmt = select(AuditLog).options(selectinload(AuditLog.actor))
+        stmt = select(AuditLog).options(joinedload(AuditLog.actor))
         count_stmt = select(func.count(AuditLog.id))
 
         if actor_id is not None:

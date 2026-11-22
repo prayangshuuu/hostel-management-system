@@ -100,8 +100,10 @@ class HostelService:
             gender_type=gender_type,
             search=search,
         )
+        hostel_ids = [h.id for h in hostels]
+        capacities = await self.room_repo.get_total_capacities_for_hostels(hostel_ids)
         for h in hostels:
-            h.total_capacity = await self.room_repo.get_total_capacity_for_hostel(h.id)
+            h.total_capacity = capacities.get(h.id, 0)
         items = [HostelRead.model_validate(h) for h in hostels]
         return Page.create(items=items, total=total, params=params)
 

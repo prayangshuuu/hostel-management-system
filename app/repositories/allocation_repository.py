@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.base import ExecutableOption
 
 from app.models.allocation import Allocation, AllocationStatus
@@ -27,11 +27,11 @@ class AllocationRepository:
     def _eager_load_options(self) -> builtins.list[ExecutableOption]:
         """Return eager loading options for student, user, bed, room, block, and hostel."""
         return [
-            selectinload(Allocation.student).selectinload(StudentProfile.user),
-            selectinload(Allocation.bed)
-            .selectinload(Bed.room)
-            .selectinload(Room.block)
-            .selectinload(Block.hostel),
+            joinedload(Allocation.student).joinedload(StudentProfile.user),
+            joinedload(Allocation.bed)
+            .joinedload(Bed.room)
+            .joinedload(Room.block)
+            .joinedload(Block.hostel),
         ]
 
     async def get_by_id(self, id: UUID) -> Allocation | None:
@@ -45,13 +45,35 @@ class AllocationRepository:
         stmt = (
             select(Allocation)
             .options(*self._eager_load_options())
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
             .where(
                 Allocation.student_id == student_id,
                 Allocation.status == AllocationStatus.ACTIVE,
+                StudentProfile.is_deleted.is_(False),
             )
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
+
+    async def get_active_by_student_ids(
+        self, student_ids: builtins.list[UUID]
+    ) -> dict[UUID, Allocation]:
+        """Fetch active allocations for a list of student profile IDs in a single query."""
+        if not student_ids:
+            return {}
+        stmt = (
+            select(Allocation)
+            .options(*self._eager_load_options())
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
+            .where(
+                Allocation.student_id.in_(student_ids),
+                Allocation.status == AllocationStatus.ACTIVE,
+                StudentProfile.is_deleted.is_(False),
+            )
+        )
+        result = await self.session.execute(stmt)
+        allocations = list(result.scalars().all())
+        return {alloc.student_id: alloc for alloc in allocations}
 
     async def get_active_by_bed_id(self, bed_id: UUID) -> Allocation | None:
         """Fetch active allocation for a bed with relations loaded."""
@@ -73,9 +95,11 @@ class AllocationRepository:
             .join(Bed, Allocation.bed_id == Bed.id)
             .join(Room, Bed.room_id == Room.id)
             .join(Block, Room.block_id == Block.id)
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
             .where(
                 Block.hostel_id == hostel_id,
                 Allocation.status == AllocationStatus.ACTIVE,
+                StudentProfile.is_deleted.is_(False),
             )
         )
         result = await self.session.execute(stmt)
@@ -92,11 +116,14 @@ class AllocationRepository:
             .join(Bed, Allocation.bed_id == Bed.id)
             .join(Room, Bed.room_id == Room.id)
             .join(Block, Room.block_id == Block.id)
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
             .where(
                 Block.hostel_id == hostel_id,
                 Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.ENDED]),
                 Allocation.start_date <= period_end,
                 or_(Allocation.end_date.is_(None), Allocation.end_date >= period_start),
+                StudentProfile.is_deleted.is_(False),
+                Room.is_deleted.is_(False),
             )
             .order_by(Allocation.start_date.asc())
         )
@@ -129,9 +156,11 @@ class AllocationRepository:
         stmt = (
             select(func.count(Allocation.id))
             .join(Bed, Allocation.bed_id == Bed.id)
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
             .where(
                 Bed.room_id == room_id,
                 Allocation.status == AllocationStatus.ACTIVE,
+                StudentProfile.is_deleted.is_(False),
             )
         )
         result = await self.session.execute(stmt)
@@ -233,6 +262,7 @@ class AllocationRepository:
             .where(
                 Bed.room_id == room_id,
                 Allocation.status == AllocationStatus.ACTIVE,
+                StudentProfile.is_deleted.is_(False),
             )
             .order_by(Bed.label.asc())
         )

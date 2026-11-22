@@ -322,8 +322,10 @@ class StudentService:
             warden_hostel_ids=warden_hostel_ids,
         )
 
+        profile_ids = [p.id for p in profiles]
+        active_alloc_map = await self.allocation_repo.get_active_by_student_ids(profile_ids)
         for p in profiles:
-            p.current_allocation = await self.allocation_repo.get_active_by_student_id(p.id)
+            p.current_allocation = active_alloc_map.get(p.id)
 
         items = [StudentProfileRead.model_validate(p) for p in profiles]
         return Page.create(items=items, total=total, params=params)

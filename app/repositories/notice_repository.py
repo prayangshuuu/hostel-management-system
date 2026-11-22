@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import false, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.models.notice import Notice, NoticeAudience, NoticeRead
 from app.models.user import UserRole
@@ -30,8 +30,8 @@ class NoticeRepository:
         stmt = (
             select(Notice)
             .options(
-                selectinload(Notice.hostel),
-                selectinload(Notice.created_by),
+                joinedload(Notice.hostel),
+                joinedload(Notice.created_by),
             )
             .where(Notice.id == id)
         )
@@ -69,8 +69,8 @@ class NoticeRepository:
     ) -> tuple[list[Notice], int]:
         """Fetch paginated notices visible to user based on role, audience, and hostel scoping."""
         stmt = select(Notice).options(
-            selectinload(Notice.hostel),
-            selectinload(Notice.created_by),
+            joinedload(Notice.hostel),
+            joinedload(Notice.created_by),
         )
         count_stmt = select(func.count(Notice.id))
 

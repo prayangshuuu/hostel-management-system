@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_active_user, get_db
+from app.api.deps import get_current_active_user, get_db, require_role
 from app.models.room import RoomType
 from app.models.user import User
 from app.schemas.common import Page, PaginationParams
@@ -58,7 +58,7 @@ async def create_room(
     id: UUID,
     body: RoomCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> RoomWithBedsRead:
     """Create a new room in the specified block and generate labeled beds."""
     service = RoomService(session)
@@ -107,7 +107,7 @@ async def update_room(
     id: UUID,
     body: RoomUpdate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> RoomWithBedsRead:
     """Update room fields, adjusting beds if capacity changes."""
     service = RoomService(session)
@@ -123,7 +123,7 @@ async def update_room(
 async def delete_room(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> None:
     """Soft delete a room record."""
     service = RoomService(session)
@@ -138,7 +138,7 @@ async def delete_room(
 async def set_maintenance(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> RoomWithBedsRead:
     """Set room status to MAINTENANCE."""
     service = RoomService(session)
@@ -154,7 +154,7 @@ async def set_maintenance(
 async def set_available(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> RoomWithBedsRead:
     """Restore room from maintenance and recalculate operational status."""
     service = RoomService(session)
@@ -170,7 +170,7 @@ async def set_available(
 async def list_beds(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role("admin", "warden"))],
 ) -> list[BedRead]:
     """Retrieve all beds for the specified room."""
     service = RoomService(session)
