@@ -56,7 +56,7 @@ uv run mypy app
 - [x] Billing (/api/v1/fee-structures, /api/v1/invoices, /api/v1/payments) ✅
 - [x] Attendance, Leave, Visitors (`/api/v1/attendance`, `/api/v1/leaves`, `/api/v1/visitors`) ✅
 - [x] Complaints (`/api/v1/complaints`) ✅
-- [ ] Mess / Meal Plans
+- [x] Mess (`/api/v1/hostels/{id}/menu`, `/api/v1/meals/opt-outs`, `/api/v1/meals/headcount`) ✅
 - [ ] Notices
 - [ ] Audit Logs & Reports
 
@@ -76,3 +76,4 @@ uv run mypy app
 | `LOG_LEVEL` | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) | `INFO` |
 | `VISIT_START` | Daily hostel visiting hours start window (`HH:MM`) | `08:00` |
 | `VISIT_END` | Daily hostel visiting hours end window (`HH:MM`) | `20:00` |
+| `MEAL_OPTOUT_CUTOFF_HOURS` | Meal opt-out cancellation cutoff window in hours | `12` |
