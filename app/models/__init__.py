@@ -9,6 +9,13 @@ from app.models.billing import (
     Payment,
     PaymentMethod,
 )
+from app.models.complaint import (
+    Complaint,
+    ComplaintCategory,
+    ComplaintComment,
+    ComplaintPriority,
+    ComplaintStatus,
+)
 from app.models.hostel import Block, GenderType, Hostel, WardenAssignment
 from app.models.operations import (
     AttendanceLog,
@@ -28,6 +35,11 @@ __all__ = [
     "AttendanceType",
     "Bed",
     "Block",
+    "Complaint",
+    "ComplaintCategory",
+    "ComplaintComment",
+    "ComplaintPriority",
+    "ComplaintStatus",
     "FeePeriod",
     "FeeStructure",
     "GenderType",
