@@ -31,17 +31,29 @@ async def test_request_id_echoed_when_provided(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_request_timing_logged(client: AsyncClient, caplog: pytest.LogCaptureFixture) -> None:
     """Verify that request timing and method are logged with request ID."""
-    with caplog.at_level(logging.INFO, logger="app.middleware.request"):
+    logger = logging.getLogger("app.middleware.request")
+    logger.setLevel(logging.INFO)
+
+    class RecordHandler(logging.Handler):
+        def __init__(self) -> None:
+            super().__init__()
+            self.records: list[logging.LogRecord] = []
+
+        def emit(self, record: logging.LogRecord) -> None:
+            self.records.append(record)
+
+    handler = RecordHandler()
+    logger.addHandler(handler)
+    try:
         response = await client.get("/api/v1/health")
         assert response.status_code == 200
 
-    matching_records = [
-        rec
-        for rec in caplog.records
-        if rec.name == "app.middleware.request" and "GET" in rec.message
-    ]
-    assert len(matching_records) >= 1
-    record = matching_records[0]
-    assert "/api/v1/health" in record.message
-    assert "200" in record.message
-    assert "ms" in record.message
+        matching_records = [rec for rec in handler.records if "GET" in rec.getMessage()]
+        assert len(matching_records) >= 1
+        record = matching_records[0]
+        msg = record.getMessage()
+        assert "/api/v1/health" in msg
+        assert "200" in msg
+        assert "ms" in msg
+    finally:
+        logger.removeHandler(handler)

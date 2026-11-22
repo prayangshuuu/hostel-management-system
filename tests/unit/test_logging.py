@@ -113,8 +113,17 @@ def test_setup_logging(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "LOG_LEVEL", "DEBUG")
     monkeypatch.setattr(settings, "APP_ENV", "production")
 
-    setup_logging()
     root_logger = logging.getLogger()
-    assert root_logger.level == logging.DEBUG
-    assert len(root_logger.handlers) == 1
-    assert isinstance(root_logger.handlers[0].formatter, JSONFormatter)
+    original_handlers = list(root_logger.handlers)
+    original_level = root_logger.level
+    try:
+        setup_logging()
+        assert root_logger.level == logging.DEBUG
+        stream_handlers = [
+            h for h in root_logger.handlers if not type(h).__name__.startswith("LogCapture")
+        ]
+        assert len(stream_handlers) == 1
+        assert isinstance(stream_handlers[0].formatter, JSONFormatter)
+    finally:
+        root_logger.handlers = original_handlers
+        root_logger.setLevel(original_level)
