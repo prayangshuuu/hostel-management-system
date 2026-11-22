@@ -40,6 +40,7 @@ from app.schemas.billing import (
     StudentBalanceRead,
 )
 from app.schemas.common import Page, PaginationParams
+from app.services.audit_service import AuditService
 from app.services.hostel_service import ensure_hostel_access
 
 
@@ -355,6 +356,24 @@ class BillingService:
             invoice.status = InvoiceStatus.PARTIAL
 
         await self.invoice_repo.update(invoice)
+
+        method_val = (
+            created_payment.method.value
+            if hasattr(created_payment.method, "value")
+            else str(created_payment.method)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "payment.create",
+            "Payment",
+            created_payment.id,
+            {
+                "invoice_id": str(invoice.id),
+                "amount": str(created_payment.amount),
+                "method": method_val,
+            },
+        )
         return created_payment
 
     async def mark_overdue(self, today: date | None = None) -> int:
@@ -460,13 +479,33 @@ class BillingService:
             )
         await self.invoice_repo.delete(invoice)
 
-    async def void_invoice(self, invoice_id: UUID) -> Invoice:
+    async def void_invoice(
+        self,
+        invoice_id: UUID,
+        current_user: User | None = None,
+    ) -> Invoice:
         """Void an existing invoice."""
         invoice = await self.invoice_repo.get_by_id(invoice_id, load_payments=True)
         if invoice is None:
             raise NotFoundError("Invoice not found", code="INVOICE_NOT_FOUND")
         invoice.status = InvoiceStatus.VOID
         await self.invoice_repo.update(invoice)
+
+        status_val = (
+            invoice.status.value if hasattr(invoice.status, "value") else str(invoice.status)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id if current_user else None,
+            "invoice.void",
+            "Invoice",
+            invoice.id,
+            {
+                "amount": str(invoice.amount),
+                "status": status_val,
+            },
+        )
+
         loaded = await self.invoice_repo.get_by_id(invoice.id, load_payments=True)
         return loaded or invoice
 

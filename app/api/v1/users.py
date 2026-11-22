@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_role
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
 from app.schemas.common import Page, PaginationParams
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -29,10 +29,11 @@ router = APIRouter(
 async def create_user(
     body: UserCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN))],
 ) -> UserRead:
     """Create a user with specified role and details."""
     user_service = UserService(UserRepository(session))
-    user = await user_service.create_user(body)
+    user = await user_service.create_user(body, current_user=current_user)
     return UserRead.model_validate(user)
 
 
@@ -97,8 +98,9 @@ async def update_user(
 async def deactivate_user(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN))],
 ) -> UserRead:
     """Set user account active status to false."""
     user_service = UserService(UserRepository(session))
-    user = await user_service.deactivate_user(id)
+    user = await user_service.deactivate_user(id, current_user=current_user)
     return UserRead.model_validate(user)

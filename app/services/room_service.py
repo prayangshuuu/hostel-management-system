@@ -22,6 +22,7 @@ from app.schemas.room import (
     RoomUpdate,
     validate_capacity_for_room_type,
 )
+from app.services.audit_service import AuditService
 from app.services.hostel_service import ensure_hostel_access
 
 
@@ -168,14 +169,38 @@ class RoomService:
         """Set room status to MAINTENANCE."""
         room = await self.get_room(room_id, current_user)
         room.status = RoomStatus.MAINTENANCE
-        return await self.room_repo.update(room)
+        updated = await self.room_repo.update(room)
+        status_val = (
+            updated.status.value if hasattr(updated.status, "value") else str(updated.status)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "room.maintenance_toggle",
+            "Room",
+            room.id,
+            {"status": status_val},
+        )
+        return updated
 
     async def set_available(self, room_id: UUID, current_user: User) -> Room:
         """Reset room from maintenance and recalculate status."""
         room = await self.get_room(room_id, current_user)
         room.status = RoomStatus.AVAILABLE
         self.recalculate_status(room)
-        return await self.room_repo.update(room)
+        updated = await self.room_repo.update(room)
+        status_val = (
+            updated.status.value if hasattr(updated.status, "value") else str(updated.status)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "room.maintenance_toggle",
+            "Room",
+            room.id,
+            {"status": status_val},
+        )
+        return updated
 
     async def delete_room(self, room_id: UUID, current_user: User) -> Room:
         """Soft delete a room."""

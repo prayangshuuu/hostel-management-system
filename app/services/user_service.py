@@ -8,6 +8,7 @@ from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
 from app.schemas.common import Page, PaginationParams
 from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.services.audit_service import AuditService
 
 
 class UserService:
@@ -15,8 +16,13 @@ class UserService:
 
     def __init__(self, user_repo: UserRepository) -> None:
         self.user_repo = user_repo
+        self.session = user_repo.session
 
-    async def create_user(self, user_create: UserCreate) -> User:
+    async def create_user(
+        self,
+        user_create: UserCreate,
+        current_user: User | None = None,
+    ) -> User:
         """Create a new user ensuring email uniqueness and password policy compliance."""
         existing_user = await self.user_repo.get_by_email(user_create.email)
         if existing_user is not None:
@@ -33,7 +39,22 @@ class UserService:
             role=user_create.role,
             is_active=True,
         )
-        return await self.user_repo.create(user)
+        created_user = await self.user_repo.create(user)
+
+        role_val = (
+            created_user.role.value
+            if hasattr(created_user.role, "value")
+            else str(created_user.role)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id if current_user else None,
+            "user.create",
+            "User",
+            created_user.id,
+            {"email": created_user.email, "role": role_val},
+        )
+        return created_user
 
     async def get_user(self, user_id: UUID) -> User:
         """Retrieve a user by ID or raise NotFoundError."""
@@ -52,11 +73,25 @@ class UserService:
 
         return await self.user_repo.update(user)
 
-    async def deactivate_user(self, user_id: UUID) -> User:
+    async def deactivate_user(
+        self,
+        user_id: UUID,
+        current_user: User | None = None,
+    ) -> User:
         """Deactivate a user account."""
         user = await self.get_user(user_id)
         user.is_active = False
-        return await self.user_repo.update(user)
+        updated_user = await self.user_repo.update(user)
+
+        await AuditService.record(
+            self.session,
+            current_user.id if current_user else None,
+            "user.deactivate",
+            "User",
+            updated_user.id,
+            {"email": updated_user.email, "is_active": False},
+        )
+        return updated_user
 
     async def list_users(
         self,

@@ -220,16 +220,16 @@ async def delete_invoice(
 @router.post(
     "/invoices/{id}/void",
     response_model=InvoiceRead,
-    dependencies=[Depends(require_role(UserRole.ADMIN))],
     summary="Void an invoice (admin only)",
 )
 async def void_invoice(
     id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN))],
 ) -> InvoiceRead:
     """Void an invoice entity."""
     service = BillingService(session)
-    invoice = await service.void_invoice(id)
+    invoice = await service.void_invoice(id, current_user=current_user)
     return InvoiceRead.model_validate(invoice)
 
 

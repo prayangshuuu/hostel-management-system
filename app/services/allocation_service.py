@@ -32,6 +32,7 @@ from app.schemas.allocation import (
     OccupantRead,
 )
 from app.schemas.common import Page, PaginationParams
+from app.services.audit_service import AuditService
 from app.services.hostel_service import ensure_hostel_access
 from app.services.room_service import RoomService
 
@@ -184,6 +185,19 @@ class AllocationService:
             await self.session.rollback()
             raise ConflictError("Allocation conflict detected", code="ALLOCATION_CONFLICT") from exc
 
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "allocation.create",
+            "Allocation",
+            allocation.id,
+            {
+                "student_id": str(allocation.student_id),
+                "bed_id": str(allocation.bed_id),
+                "start_date": allocation.start_date.isoformat(),
+            },
+        )
+
         loaded = await self.allocation_repo.get_by_id(allocation.id)
         return loaded or allocation
 
@@ -228,6 +242,19 @@ class AllocationService:
             await self.room_repo.update(room)
 
         await self.allocation_repo.update(allocation)
+
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "allocation.vacate",
+            "Allocation",
+            allocation.id,
+            {
+                "end_date": allocation.end_date.isoformat() if allocation.end_date else None,
+                "reason": allocation.reason,
+            },
+        )
+
         loaded = await self.allocation_repo.get_by_id(allocation.id)
         return loaded or allocation
 
@@ -383,6 +410,19 @@ class AllocationService:
                     "Allocation conflict detected", code="ALLOCATION_CONFLICT"
                 ) from exc
 
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "allocation.transfer",
+            "Allocation",
+            new_allocation.id,
+            {
+                "old_allocation_id": str(allocation_id),
+                "student_id": str(student_id),
+                "new_bed_id": str(new_bed.id),
+            },
+        )
+
         loaded = await self.allocation_repo.get_by_id(new_allocation.id)
         return loaded or new_allocation
 
@@ -428,6 +468,24 @@ class AllocationService:
             await self.room_repo.update(room)
 
         await self.allocation_repo.update(allocation)
+
+        status_val = (
+            allocation.status.value
+            if hasattr(allocation.status, "value")
+            else str(allocation.status)
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "allocation.cancel",
+            "Allocation",
+            allocation.id,
+            {
+                "student_id": str(allocation.student_id),
+                "status": status_val,
+            },
+        )
+
         loaded = await self.allocation_repo.get_by_id(allocation.id)
         return loaded or allocation
 

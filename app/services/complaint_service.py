@@ -36,6 +36,7 @@ from app.schemas.complaint import (
     ComplaintRead,
     ComplaintStatusUpdateRequest,
 )
+from app.services.audit_service import AuditService
 from app.services.hostel_service import ensure_hostel_access
 
 __all__ = ["ComplaintService"]
@@ -249,6 +250,9 @@ class ComplaintService:
         elif data.status == ComplaintStatus.RESOLVED:
             complaint.resolved_at = datetime.now(UTC)
 
+        old_status = str(
+            complaint.status.value if hasattr(complaint.status, "value") else complaint.status
+        )
         complaint.status = data.status
 
         if data.resolution_notes:
@@ -267,6 +271,19 @@ class ComplaintService:
                 await self.room_repo.update(room)
 
         await self.complaint_repo.update(complaint)
+
+        new_status = str(
+            complaint.status.value if hasattr(complaint.status, "value") else complaint.status
+        )
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "complaint.status_change",
+            "Complaint",
+            complaint.id,
+            {"old_status": old_status, "new_status": new_status},
+        )
+
         loaded = await self.complaint_repo.get_by_id(complaint.id, load_comments=False)
         return loaded or complaint
 

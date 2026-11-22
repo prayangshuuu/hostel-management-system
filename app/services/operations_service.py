@@ -39,6 +39,7 @@ from app.schemas.operations import (
     VisitorCheckOutRequest,
     VisitorCreate,
 )
+from app.services.audit_service import AuditService
 from app.services.hostel_service import ensure_hostel_access
 
 
@@ -364,7 +365,17 @@ class OperationsService:
         if review and review.review_notes is not None:
             leave.review_notes = review.review_notes
 
-        return await self.leave_repo.update(leave)
+        updated = await self.leave_repo.update(leave)
+        status_val = leave.status.value if hasattr(leave.status, "value") else str(leave.status)
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "leave.approve",
+            "LeaveRequest",
+            leave.id,
+            {"student_id": str(leave.student_id), "status": status_val},
+        )
+        return updated
 
     async def reject_leave_request(
         self,
@@ -400,7 +411,17 @@ class OperationsService:
         if review and review.review_notes is not None:
             leave.review_notes = review.review_notes
 
-        return await self.leave_repo.update(leave)
+        updated = await self.leave_repo.update(leave)
+        status_val = leave.status.value if hasattr(leave.status, "value") else str(leave.status)
+        await AuditService.record(
+            self.session,
+            current_user.id,
+            "leave.reject",
+            "LeaveRequest",
+            leave.id,
+            {"student_id": str(leave.student_id), "status": status_val},
+        )
+        return updated
 
     async def cancel_leave_request(
         self,
