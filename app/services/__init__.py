@@ -5,6 +5,7 @@ from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.complaint_service import ComplaintService
 from app.services.hostel_service import HostelService, ensure_hostel_access
+from app.services.mess_service import MessService
 from app.services.operations_service import OperationsService
 from app.services.room_service import RoomService, generate_bed_labels
 from app.services.student_service import StudentService, generate_temporary_password
@@ -16,6 +17,7 @@ __all__ = [
     "BillingService",
     "ComplaintService",
     "HostelService",
+    "MessService",
     "OperationsService",
     "RoomService",
     "StudentService",

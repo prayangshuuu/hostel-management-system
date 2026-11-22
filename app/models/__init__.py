@@ -17,6 +17,7 @@ from app.models.complaint import (
     ComplaintStatus,
 )
 from app.models.hostel import Block, GenderType, Hostel, WardenAssignment
+from app.models.mess import MealOptOut, MealType, MessMenu
 from app.models.operations import (
     AttendanceLog,
     AttendanceType,
@@ -48,6 +49,9 @@ __all__ = [
     "InvoiceStatus",
     "LeaveRequest",
     "LeaveStatus",
+    "MealOptOut",
+    "MealType",
+    "MessMenu",
     "Payment",
     "PaymentMethod",
     "Room",

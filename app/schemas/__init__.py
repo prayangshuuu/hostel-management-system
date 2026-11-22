@@ -55,6 +55,14 @@ from app.schemas.hostel import (
     WardenAssignmentRead,
     WardenAssignRequest,
 )
+from app.schemas.mess import (
+    DailyMenuRead,
+    MealType,
+    MessMenuBulkUpdateRequest,
+    MessMenuItemCreate,
+    MessMenuItemRead,
+    WeeklyMenuRead,
+)
 from app.schemas.operations import (
     AttendanceActionRequest,
     AttendanceRead,
@@ -112,6 +120,7 @@ __all__ = [
     "ComplaintRead",
     "ComplaintStatus",
     "ComplaintStatusUpdateRequest",
+    "DailyMenuRead",
     "FeePeriod",
     "FeeStructureCreate",
     "FeeStructureRead",
@@ -131,6 +140,10 @@ __all__ = [
     "LeaveReviewRequest",
     "LeaveStatus",
     "LoginRequest",
+    "MealType",
+    "MessMenuBulkUpdateRequest",
+    "MessMenuItemCreate",
+    "MessMenuItemRead",
     "OccupantRead",
     "Page",
     "PaginationParams",
@@ -162,4 +175,5 @@ __all__ = [
     "VisitorRead",
     "WardenAssignRequest",
     "WardenAssignmentRead",
+    "WeeklyMenuRead",
 ]
