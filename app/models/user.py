@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Enum, String
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPkMixin
 
 if TYPE_CHECKING:
+    from app.models.auth import RefreshToken
     from app.models.student import StudentProfile
 
 
@@ -57,12 +59,28 @@ class User(Base, UUIDPkMixin, TimestampMixin):
         server_default="true",
         nullable=False,
     )
+    failed_login_attempts: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+    locked_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     student_profile: Mapped[StudentProfile | None] = relationship(
         "StudentProfile",
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    refresh_tokens: Mapped[list[RefreshToken]] = relationship(
+        "RefreshToken",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     def __repr__(self) -> str:
