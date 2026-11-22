@@ -31,6 +31,8 @@ __all__ = [
 class AttendanceActionRequest(BaseModel):
     """Payload for student hostel check-in and check-out recording."""
 
+    model_config = ConfigDict(extra="forbid")
+
     student_id: UUID
     remarks: str | None = None
     timestamp: datetime | None = None
@@ -112,6 +114,8 @@ class PresentStudentRead(BaseModel):
 class LeaveRequestCreate(BaseModel):
     """Payload for submitting a new hostel leave request."""
 
+    model_config = ConfigDict(extra="forbid")
+
     from_date: date
     to_date: date
     reason: str = Field(min_length=1, max_length=500)
@@ -127,6 +131,8 @@ class LeaveRequestCreate(BaseModel):
 
 class LeaveReviewRequest(BaseModel):
     """Payload for approving or rejecting a leave request."""
+
+    model_config = ConfigDict(extra="forbid")
 
     review_notes: str | None = Field(default=None, max_length=500)
 
@@ -198,6 +204,8 @@ class LeaveRequestRead(BaseModel):
 class VisitorCreate(BaseModel):
     """Payload for logging a visitor check-in to visit a hostel resident."""
 
+    model_config = ConfigDict(extra="forbid")
+
     student_id: UUID
     name: str = Field(min_length=1, max_length=100)
     phone: str = Field(min_length=1, max_length=50)
@@ -209,6 +217,8 @@ class VisitorCreate(BaseModel):
 
 class VisitorCheckOutRequest(BaseModel):
     """Payload for completing a visitor checkout."""
+
+    model_config = ConfigDict(extra="forbid")
 
     remarks: str | None = None
 

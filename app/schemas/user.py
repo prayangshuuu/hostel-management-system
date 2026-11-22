@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.user import UserRole
 
@@ -11,9 +11,11 @@ from app.models.user import UserRole
 class UserBase(BaseModel):
     """Base fields shared by user schemas."""
 
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
-    full_name: str
-    phone: str | None = None
+    full_name: str = Field(min_length=1, max_length=255)
+    phone: str | None = Field(default=None, max_length=50)
 
     @field_validator("email", mode="before")
     @classmethod
@@ -44,8 +46,10 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Payload for updating user fields."""
 
-    full_name: str | None = None
-    phone: str | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=255)
+    phone: str | None = Field(default=None, max_length=50)
     role: UserRole | None = None
     is_active: bool | None = None
 

@@ -22,6 +22,8 @@ __all__ = [
 class NoticeCreate(BaseModel):
     """Payload to create a new notice announcement."""
 
+    model_config = ConfigDict(extra="forbid")
+
     hostel_id: UUID | None = None
     title: str = Field(min_length=1, max_length=255)
     body: str = Field(min_length=1)
@@ -44,6 +46,8 @@ class NoticeCreate(BaseModel):
 
 class NoticeUpdate(BaseModel):
     """Payload to update an existing notice announcement."""
+
+    model_config = ConfigDict(extra="forbid")
 
     title: str | None = Field(default=None, min_length=1, max_length=255)
     body: str | None = Field(default=None, min_length=1)

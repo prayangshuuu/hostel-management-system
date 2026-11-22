@@ -14,6 +14,8 @@ from app.models.room import RoomType
 class FeeStructureCreate(BaseModel):
     """Payload for configuring a fee structure for a hostel and room type."""
 
+    model_config = ConfigDict(extra="forbid")
+
     hostel_id: UUID
     room_type: RoomType
     amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
@@ -22,6 +24,8 @@ class FeeStructureCreate(BaseModel):
 
 class FeeStructureUpdate(BaseModel):
     """Payload for modifying an existing fee structure."""
+
+    model_config = ConfigDict(extra="forbid")
 
     amount: Decimal | None = Field(default=None, gt=0, max_digits=12, decimal_places=2)
     is_active: bool | None = None
@@ -44,6 +48,8 @@ class FeeStructureRead(BaseModel):
 
 class InvoiceGenerateRequest(BaseModel):
     """Request payload for bulk invoice generation."""
+
+    model_config = ConfigDict(extra="forbid")
 
     hostel_id: UUID
     period_start: date
@@ -146,6 +152,8 @@ class InvoiceGenerateResponse(BaseModel):
 
 class PaymentCreate(BaseModel):
     """Payload for recording a payment against an invoice."""
+
+    model_config = ConfigDict(extra="forbid")
 
     amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
     method: PaymentMethod

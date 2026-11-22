@@ -12,6 +12,8 @@ from app.models.allocation import AllocationStatus
 class AllocationCreate(BaseModel):
     """Payload for allocating a bed/room to a student."""
 
+    model_config = ConfigDict(extra="forbid")
+
     student_id: UUID
     bed_id: UUID | None = None
     room_id: UUID | None = None
@@ -28,12 +30,16 @@ class AllocationCreate(BaseModel):
 class AllocationVacateRequest(BaseModel):
     """Payload for ending/vacating an active room bed allocation."""
 
+    model_config = ConfigDict(extra="forbid")
+
     end_date: date | None = None
     reason: str | None = Field(default=None, max_length=500)
 
 
 class AllocationTransferRequest(BaseModel):
     """Payload for transferring a student allocation to a new bed or room."""
+
+    model_config = ConfigDict(extra="forbid")
 
     new_bed_id: UUID | None = None
     new_room_id: UUID | None = None

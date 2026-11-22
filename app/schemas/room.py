@@ -42,6 +42,8 @@ def validate_capacity_for_room_type(room_type: RoomType, capacity: int) -> None:
 class RoomBase(BaseModel):
     """Base fields shared across room schemas."""
 
+    model_config = ConfigDict(extra="forbid")
+
     number: str = Field(min_length=1, max_length=50)
     floor: int = Field(default=1)
     room_type: RoomType
@@ -69,6 +71,8 @@ class RoomCreate(RoomBase):
 
 class RoomUpdate(BaseModel):
     """Payload for updating room details."""
+
+    model_config = ConfigDict(extra="forbid")
 
     number: str | None = Field(default=None, min_length=1, max_length=50)
     floor: int | None = None

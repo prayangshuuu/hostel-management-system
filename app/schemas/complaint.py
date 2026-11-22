@@ -27,6 +27,8 @@ __all__ = [
 class ComplaintCreate(BaseModel):
     """Payload to lodge a new student complaint."""
 
+    model_config = ConfigDict(extra="forbid")
+
     title: str = Field(min_length=1, max_length=150)
     description: str = Field(min_length=1, max_length=1000)
     category: ComplaintCategory
@@ -36,6 +38,8 @@ class ComplaintCreate(BaseModel):
 class ComplaintStatusUpdateRequest(BaseModel):
     """Payload to transition complaint lifecycle status."""
 
+    model_config = ConfigDict(extra="forbid")
+
     status: ComplaintStatus
     resolution_notes: str | None = Field(default=None, max_length=500)
     mark_room_maintenance: bool = False
@@ -44,11 +48,15 @@ class ComplaintStatusUpdateRequest(BaseModel):
 class ComplaintAssignRequest(BaseModel):
     """Payload to assign a complaint to staff / user."""
 
+    model_config = ConfigDict(extra="forbid")
+
     assigned_to: UUID
 
 
 class ComplaintCommentCreate(BaseModel):
     """Payload to post a comment to an existing complaint."""
+
+    model_config = ConfigDict(extra="forbid")
 
     body: str = Field(min_length=1, max_length=1000)
     is_internal: bool = False

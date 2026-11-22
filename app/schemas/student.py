@@ -35,15 +35,17 @@ def validate_required_phone_number(v: str) -> str:
 class StudentCreate(BaseModel):
     """Payload for creating a new student account and associated profile."""
 
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
-    full_name: str
+    full_name: str = Field(min_length=1, max_length=255)
     phone: str | None = None
     password: str | None = None
-    student_no: str
+    student_no: str = Field(min_length=1, max_length=50)
     gender: GenderType
-    department: str
+    department: str = Field(min_length=1, max_length=100)
     year: int = Field(ge=1, le=6, description="Academic year (1 to 6)")
-    guardian_name: str
+    guardian_name: str = Field(min_length=1, max_length=255)
     guardian_phone: str
     emergency_contact: str
 
@@ -88,12 +90,14 @@ class StudentCreate(BaseModel):
 class StudentUpdate(BaseModel):
     """Payload for updating student profile and user details by admin or warden."""
 
-    department: str | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    department: str | None = Field(default=None, min_length=1, max_length=100)
     year: int | None = Field(default=None, ge=1, le=6)
-    guardian_name: str | None = None
+    guardian_name: str | None = Field(default=None, min_length=1, max_length=255)
     guardian_phone: str | None = None
     emergency_contact: str | None = None
-    full_name: str | None = None
+    full_name: str | None = Field(default=None, min_length=1, max_length=255)
     phone: str | None = None
     is_active: bool | None = None
 

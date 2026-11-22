@@ -27,6 +27,8 @@ __all__ = [
 class MessMenuItemCreate(BaseModel):
     """Payload to create or replace a mess menu item."""
 
+    model_config = ConfigDict(extra="forbid")
+
     day_of_week: int = Field(ge=0, le=6, description="Day of week (0=Monday, 6=Sunday)")
     meal_type: MealType
     items: list[str] = Field(min_length=1, description="List of food items served")
@@ -34,6 +36,8 @@ class MessMenuItemCreate(BaseModel):
 
 class MessMenuBulkUpdateRequest(BaseModel):
     """Payload for bulk updating or replacing a hostel's weekly menu."""
+
+    model_config = ConfigDict(extra="forbid")
 
     entries: list[MessMenuItemCreate] = Field(default_factory=list)
 
@@ -90,6 +94,8 @@ class DailyMenuRead(BaseModel):
 
 class MealOptOutCreate(BaseModel):
     """Payload for opting out of a specific meal."""
+
+    model_config = ConfigDict(extra="forbid")
 
     date: date
     meal_type: MealType

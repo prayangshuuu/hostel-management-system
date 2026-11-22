@@ -12,6 +12,8 @@ from app.models.hostel import GenderType
 class HostelBase(BaseModel):
     """Base fields shared by hostel schemas."""
 
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(min_length=1, max_length=255)
     code: str = Field(min_length=1, max_length=50)
     gender_type: GenderType = GenderType.MIXED
@@ -32,6 +34,8 @@ class HostelCreate(HostelBase):
 
 class HostelUpdate(BaseModel):
     """Payload for updating hostel details."""
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str | None = Field(default=None, min_length=1, max_length=255)
     code: str | None = Field(default=None, min_length=1, max_length=50)
@@ -66,6 +70,8 @@ class HostelRead(BaseModel):
 class BlockBase(BaseModel):
     """Base fields shared by block schemas."""
 
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(min_length=1, max_length=100)
     floor_count: int = Field(default=1, ge=1)
 
@@ -84,6 +90,8 @@ class BlockCreate(BlockBase):
 
 class BlockUpdate(BaseModel):
     """Payload for updating block details."""
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str | None = Field(default=None, min_length=1, max_length=100)
     floor_count: int | None = Field(default=None, ge=1)
@@ -112,6 +120,8 @@ class BlockRead(BaseModel):
 
 class WardenAssignRequest(BaseModel):
     """Payload for assigning a warden to a hostel."""
+
+    model_config = ConfigDict(extra="forbid")
 
     user_id: UUID
 
