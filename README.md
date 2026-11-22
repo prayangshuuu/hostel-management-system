@@ -53,8 +53,7 @@ uv run mypy app
 - [x] Rooms & Beds (`/api/v1/rooms`, `/api/v1/blocks/{id}/rooms`) ✅
 - [x] Student Profiles (`/api/v1/students`, `/api/v1/students/me`) ✅
 - [x] Allocations (`/api/v1/allocations`, `/api/v1/rooms/{id}/occupants`) ✅
-- [ ] Fee Structures & Invoices
-- [ ] Payments
+- [x] Billing (/api/v1/fee-structures, /api/v1/invoices, /api/v1/payments) ✅
 - [ ] Attendance
 - [ ] Leave Requests
 - [ ] Visitors
