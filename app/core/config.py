@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "Hostel Management System"
-    APP_VERSION: str = "0.1.0"
+    APP_VERSION: str = "1.0.0"
     APP_ENV: str = "development"
     DEBUG: bool = False
 
