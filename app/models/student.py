@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, Integer, String
+from sqlalchemy import Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
@@ -24,6 +24,7 @@ class StudentProfile(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
     """Student profile entity linked one-to-one with User."""
 
     __tablename__ = "student_profiles"
+    __table_args__ = (Index("ix_student_profiles_department_year", "department", "year"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),

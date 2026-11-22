@@ -37,7 +37,10 @@ class AttendanceLog(Base, UUIDPkMixin, TimestampMixin):
     """Hostel check-in and check-out attendance record."""
 
     __tablename__ = "attendance_logs"
-    __table_args__ = (Index("ix_attendance_logs_student_id_timestamp", "student_id", "timestamp"),)
+    __table_args__ = (
+        Index("ix_attendance_logs_student_id_timestamp", "student_id", "timestamp"),
+        Index("ix_attendance_logs_type_timestamp", "type", "timestamp"),
+    )
 
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("student_profiles.id", ondelete="CASCADE"),

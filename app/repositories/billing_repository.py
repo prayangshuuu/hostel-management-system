@@ -118,6 +118,8 @@ class InvoiceRepository:
         )
         bind = self.session.bind
         if bind and getattr(bind.dialect, "name", "") == "postgresql":
+            stmt = stmt.with_for_update(of=Invoice)
+        else:
             stmt = stmt.with_for_update()
         result = await self.session.execute(stmt)
         return result.scalars().first()

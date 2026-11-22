@@ -45,6 +45,7 @@ class Allocation(Base, UUIDPkMixin, TimestampMixin):
             postgresql_where=text("status = 'active'"),
             sqlite_where=text("status = 'active'"),
         ),
+        Index("ix_allocations_status_start_date", "status", "start_date"),
     )
 
     student_id: Mapped[uuid.UUID] = mapped_column(

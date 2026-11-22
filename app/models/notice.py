@@ -42,6 +42,7 @@ class Notice(Base, UUIDPkMixin, TimestampMixin):
     __table_args__ = (
         Index("ix_notices_published_expires", "published_at", "expires_at"),
         Index("ix_notices_hostel_audience", "hostel_id", "audience"),
+        Index("ix_notices_published_at_audience", "published_at", "audience"),
     )
 
     hostel_id: Mapped[uuid.UUID | None] = mapped_column(

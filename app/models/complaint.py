@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPkMixin
@@ -51,6 +51,9 @@ class Complaint(Base, UUIDPkMixin, TimestampMixin):
     """Student complaint record."""
 
     __tablename__ = "complaints"
+    __table_args__ = (
+        Index("ix_complaints_status_category_priority", "status", "category", "priority"),
+    )
 
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("student_profiles.id", ondelete="CASCADE"),

@@ -122,6 +122,7 @@ class Invoice(Base, UUIDPkMixin, TimestampMixin):
             postgresql_where=text("status != 'void'"),
             sqlite_where=text("status != 'void'"),
         ),
+        Index("ix_invoices_status_due_date", "status", "due_date"),
     )
 
     student_id: Mapped[uuid.UUID] = mapped_column(
