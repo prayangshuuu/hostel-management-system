@@ -101,6 +101,8 @@ def setup_logging() -> None:
     root_logger.setLevel(log_level)
 
     for handler in list(root_logger.handlers):
+        if "LogCapture" in type(handler).__name__:
+            continue
         root_logger.removeHandler(handler)
 
     stream_handler = logging.StreamHandler(sys.stdout)

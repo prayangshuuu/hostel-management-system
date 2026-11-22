@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import api_router
@@ -73,6 +74,20 @@ def create_app() -> FastAPI:
                 "error": {
                     "code": code,
                     "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+                    "details": {},
+                }
+            },
+        )
+
+    @application.exception_handler(IntegrityError)
+    async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+        logger.warning("Database integrity constraint violation: %s", exc)
+        return JSONResponse(
+            status_code=409,
+            content={
+                "error": {
+                    "code": "DATABASE_CONFLICT",
+                    "message": "Database integrity constraint violation",
                     "details": {},
                 }
             },
