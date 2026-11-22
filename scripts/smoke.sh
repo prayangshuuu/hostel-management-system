@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# ==============================================================================
+# Smoke Test Script for Hostel Management System API
+# ==============================================================================
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:8000}"
 BASE_URL="${BASE_URL%/}"
-
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@hostel.example.com}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-AdminPass123}"
 
@@ -24,14 +26,28 @@ extract_json_field() {
     fi
 }
 
-# Test 1: GET /api/v1/health -> assert HTTP 200 and status == "ok"
+# Test 1: GET /api/v1/health -> assert HTTP 200 and status == "ok" (with retry loop for container warmup)
 echo "==> [1/4] Testing health check endpoint: GET ${BASE_URL}/api/v1/health"
-RESP=$(curl -sS -w "\n%{http_code}" "${BASE_URL}/api/v1/health" || true)
-HTTP_CODE=$(echo "$RESP" | tail -n 1)
-BODY=$(echo "$RESP" | sed '$d')
+MAX_HEALTH_RETRIES=30
+attempt=0
+HTTP_CODE="000"
+BODY=""
+
+while [ "$attempt" -lt "$MAX_HEALTH_RETRIES" ]; do
+    RESP=$(curl -sS -w "\n%{http_code}" "${BASE_URL}/api/v1/health" 2>/dev/null || true)
+    HTTP_CODE=$(echo "$RESP" | tail -n 1)
+    BODY=$(echo "$RESP" | sed '$d')
+
+    if [ "$HTTP_CODE" = "200" ]; then
+        break
+    fi
+
+    attempt=$((attempt + 1))
+    sleep 1
+done
 
 if [ "$HTTP_CODE" != "200" ]; then
-    echo "ERROR: Health check failed with HTTP ${HTTP_CODE}: ${BODY}" >&2
+    echo "ERROR: Health check failed after ${MAX_HEALTH_RETRIES} attempts with HTTP ${HTTP_CODE}: ${BODY}" >&2
     exit 1
 fi
 
@@ -94,4 +110,4 @@ echo "✓ Dashboard summary endpoint passed (HTTP 200)"
 
 echo "=========================================================="
 echo "SUCCESS: All smoke tests passed successfully against ${BASE_URL}!"
-echo "=========================================================="\n
+echo "=========================================================="
