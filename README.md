@@ -55,7 +55,7 @@ uv run mypy app
 - [x] Allocations (`/api/v1/allocations`, `/api/v1/rooms/{id}/occupants`) ✅
 - [x] Billing (/api/v1/fee-structures, /api/v1/invoices, /api/v1/payments) ✅
 - [x] Attendance, Leave, Visitors (`/api/v1/attendance`, `/api/v1/leaves`, `/api/v1/visitors`) ✅
-- [ ] Complaints
+- [x] Complaints (`/api/v1/complaints`) ✅
 - [ ] Mess / Meal Plans
 - [ ] Notices
 - [ ] Audit Logs & Reports
