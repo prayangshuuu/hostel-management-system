@@ -4,6 +4,7 @@ from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.billing_repository import (
     FeeStructureRepository,
     InvoiceRepository,
+    PaymentRepository,
 )
 from app.repositories.hostel_repository import (
     BlockRepository,
@@ -21,6 +22,7 @@ __all__ = [
     "FeeStructureRepository",
     "HostelRepository",
     "InvoiceRepository",
+    "PaymentRepository",
     "RoomRepository",
     "StudentRepository",
     "UserRepository",

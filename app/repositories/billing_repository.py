@@ -1,4 +1,4 @@
-"""Billing repositories for fee structures and invoices."""
+"""Billing repositories for fee structures, invoices, and payments."""
 
 import builtins
 from datetime import date
@@ -15,6 +15,7 @@ from app.models.billing import (
     FeeStructure,
     Invoice,
     InvoiceStatus,
+    Payment,
 )
 from app.models.hostel import Block
 from app.models.room import Bed, Room, RoomType
@@ -108,6 +109,19 @@ class InvoiceRepository:
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
+    async def get_by_id_for_update(self, id: UUID) -> Invoice | None:
+        """Fetch invoice by primary key UUID, locking the row on PostgreSQL."""
+        stmt = (
+            select(Invoice)
+            .options(*self._eager_load_options(load_payments=True))
+            .where(Invoice.id == id)
+        )
+        bind = self.session.bind
+        if bind and getattr(bind.dialect, "name", "") == "postgresql":
+            stmt = stmt.with_for_update()
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
     async def get_existing_for_allocation_period(
         self, allocation_id: UUID, period_start: date, period_end: date
     ) -> Invoice | None:
@@ -142,6 +156,32 @@ class InvoiceRepository:
             ],
         )
         return invoice
+
+    async def update(self, invoice: Invoice) -> Invoice:
+        """Flush changes to an existing invoice."""
+        await self.session.flush()
+        await self.session.refresh(
+            invoice,
+            attribute_names=[
+                "id",
+                "student_id",
+                "allocation_id",
+                "period_start",
+                "period_end",
+                "amount",
+                "paid_amount",
+                "due_date",
+                "status",
+                "created_at",
+                "updated_at",
+            ],
+        )
+        return invoice
+
+    async def delete(self, invoice: Invoice) -> None:
+        """Delete an invoice entity."""
+        await self.session.delete(invoice)
+        await self.session.flush()
 
     async def list(
         self,
@@ -202,3 +242,78 @@ class InvoiceRepository:
         invoices = list(result.scalars().all())
 
         return invoices, total
+
+    async def get_student_invoices(self, student_id: UUID) -> builtins.list[Invoice]:
+        """Fetch all invoices for a given student profile."""
+        stmt = (
+            select(Invoice)
+            .options(*self._eager_load_options(load_payments=True))
+            .where(Invoice.student_id == student_id)
+            .order_by(Invoice.period_start.desc(), Invoice.created_at.desc())
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+
+class PaymentRepository:
+    """Repository managing queries and persistence for Payment records."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def create(self, payment: Payment) -> Payment:
+        """Add and flush a new payment record."""
+        self.session.add(payment)
+        await self.session.flush()
+        await self.session.refresh(payment)
+        return payment
+
+    async def get_by_reference(self, reference: str) -> Payment | None:
+        """Fetch payment by unique external reference."""
+        stmt = select(Payment).where(Payment.reference == reference)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def list_by_invoice(self, invoice_id: UUID) -> builtins.list[Payment]:
+        """Fetch all payments for a given invoice ordered chronologically."""
+        stmt = (
+            select(Payment).where(Payment.invoice_id == invoice_id).order_by(Payment.paid_at.asc())
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def list(
+        self,
+        params: PaginationParams,
+        warden_hostel_ids: builtins.list[UUID] | None = None,
+    ) -> tuple[builtins.list[Payment], int]:
+        """Query paginated payments with optional warden scoping."""
+        stmt = select(Payment)
+        count_stmt = select(func.count(Payment.id))
+
+        if warden_hostel_ids is not None:
+            stmt = (
+                stmt.join(Invoice, Payment.invoice_id == Invoice.id)
+                .join(Allocation, Invoice.allocation_id == Allocation.id)
+                .join(Bed, Allocation.bed_id == Bed.id)
+                .join(Room, Bed.room_id == Room.id)
+                .join(Block, Room.block_id == Block.id)
+                .where(Block.hostel_id.in_(warden_hostel_ids))
+            )
+            count_stmt = (
+                count_stmt.join(Invoice, Payment.invoice_id == Invoice.id)
+                .join(Allocation, Invoice.allocation_id == Allocation.id)
+                .join(Bed, Allocation.bed_id == Bed.id)
+                .join(Room, Bed.room_id == Room.id)
+                .join(Block, Room.block_id == Block.id)
+                .where(Block.hostel_id.in_(warden_hostel_ids))
+            )
+
+        total_result = await self.session.execute(count_stmt)
+        total = total_result.scalar() or 0
+
+        stmt = stmt.order_by(Payment.paid_at.desc()).offset(params.offset).limit(params.limit)
+        result = await self.session.execute(stmt)
+        payments = list(result.scalars().all())
+
+        return payments, total

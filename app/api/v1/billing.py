@@ -1,4 +1,4 @@
-"""Billing, fee structure, and invoice REST endpoints."""
+"""Billing, fee structure, invoice, and payment REST endpoints."""
 
 from datetime import date
 from typing import Annotated
@@ -18,6 +18,9 @@ from app.schemas.billing import (
     InvoiceGenerateRequest,
     InvoiceGenerateResponse,
     InvoiceRead,
+    PaymentCreate,
+    PaymentRead,
+    StudentBalanceRead,
 )
 from app.schemas.common import Page, PaginationParams
 from app.services.billing_service import BillingService
@@ -183,3 +186,116 @@ async def get_invoice(
     service = BillingService(session)
     invoice = await service.get_invoice(invoice_id=id, current_user=current_user)
     return InvoiceDetailRead.model_validate(invoice)
+
+
+@router.delete(
+    "/invoices/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+    summary="Delete an invoice (admin only, guarded against payments)",
+)
+async def delete_invoice(
+    id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Delete an invoice that has no recorded payments."""
+    service = BillingService(session)
+    await service.delete_invoice(id)
+
+
+@router.post(
+    "/invoices/{id}/void",
+    response_model=InvoiceRead,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+    summary="Void an invoice (admin only)",
+)
+async def void_invoice(
+    id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> InvoiceRead:
+    """Void an invoice entity."""
+    service = BillingService(session)
+    invoice = await service.void_invoice(id)
+    return InvoiceRead.model_validate(invoice)
+
+
+@router.post(
+    "/invoices/{id}/payments",
+    response_model=PaymentRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Record payment against invoice (student for self, admin, or assigned warden)",
+)
+async def record_payment(
+    id: UUID,
+    body: PaymentCreate,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> PaymentRead:
+    """Record a payment, enforcing non-overpayment and recalculating status."""
+    service = BillingService(session)
+    payment = await service.record_payment(invoice_id=id, data=body, current_user=current_user)
+    return PaymentRead.model_validate(payment)
+
+
+# =============================================================================
+# Payment Ledger & Student Financials Endpoints
+# =============================================================================
+
+
+@router.get(
+    "/payments",
+    response_model=Page[PaymentRead],
+    summary="List payments with warden scoping (admin or warden)",
+)
+async def list_payments(
+    params: Annotated[PaginationParams, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.WARDEN))],
+) -> Page[PaymentRead]:
+    """Retrieve paginated payments ledger."""
+    service = BillingService(session)
+    return await service.list_payments(params=params, current_user=current_user)
+
+
+@router.get(
+    "/students/me/invoices",
+    response_model=list[InvoiceRead],
+    summary="Get current student invoices (student self-service)",
+)
+async def get_my_invoices(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.STUDENT))],
+) -> list[InvoiceRead]:
+    """Retrieve billing invoices issued to the authenticated student."""
+    service = BillingService(session)
+    invoices = await service.get_my_invoices(current_user=current_user)
+    return [InvoiceRead.model_validate(inv) for inv in invoices]
+
+
+@router.get(
+    "/students/me/balance",
+    response_model=StudentBalanceRead,
+    summary="Get current student financial balance summary (student self-service)",
+)
+async def get_my_balance(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.STUDENT))],
+) -> StudentBalanceRead:
+    """Retrieve financial summary and outstanding balances for authenticated student."""
+    service = BillingService(session)
+    return await service.get_my_balance(current_user=current_user)
+
+
+@router.get(
+    "/students/{id}/balance",
+    response_model=StudentBalanceRead,
+    summary="Get student financial balance by ID (admin or assigned warden)",
+)
+async def get_student_balance(
+    id: UUID,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.WARDEN))],
+) -> StudentBalanceRead:
+    """Retrieve financial summary for a student profile with warden scoping."""
+    service = BillingService(session)
+    return await service.get_student_balance_scoped(student_id=id, current_user=current_user)
