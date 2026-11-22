@@ -1,0 +1,48 @@
+# Version control
+.git/
+.gitignore
+
+# Virtual environments & package managers
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & cache
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+**/*.pyc
+**/*/__pycache__
+
+# Testing & Linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage*
+coverage.xml
+htmlcov/
+tests/
+
+# Documentation & IDEs
+docs/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment & local secrets
+.env*
+!.env.example
+
+# Local temporary and dump files
+*.log
+*.sqlite
+*.sqlite3
+*.db
+openapi.json
