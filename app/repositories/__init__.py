@@ -6,6 +6,10 @@ from app.repositories.billing_repository import (
     InvoiceRepository,
     PaymentRepository,
 )
+from app.repositories.complaint_repository import (
+    ComplaintCommentRepository,
+    ComplaintRepository,
+)
 from app.repositories.hostel_repository import (
     BlockRepository,
     HostelRepository,
@@ -25,6 +29,8 @@ __all__ = [
     "AttendanceRepository",
     "BedRepository",
     "BlockRepository",
+    "ComplaintCommentRepository",
+    "ComplaintRepository",
     "FeeStructureRepository",
     "HostelRepository",
     "InvoiceRepository",

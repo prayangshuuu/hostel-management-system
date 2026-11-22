@@ -30,6 +30,18 @@ from app.schemas.billing import (
     StudentBalanceRead,
 )
 from app.schemas.common import Page, PaginationParams
+from app.schemas.complaint import (
+    ComplaintAssignRequest,
+    ComplaintCategory,
+    ComplaintCommentCreate,
+    ComplaintCommentRead,
+    ComplaintCreate,
+    ComplaintDetailRead,
+    ComplaintPriority,
+    ComplaintRead,
+    ComplaintStatus,
+    ComplaintStatusUpdateRequest,
+)
 from app.schemas.health import HealthResponse
 from app.schemas.hostel import (
     BlockBase,
@@ -90,6 +102,16 @@ __all__ = [
     "BlockRead",
     "BlockUpdate",
     "ChangePasswordRequest",
+    "ComplaintAssignRequest",
+    "ComplaintCategory",
+    "ComplaintCommentCreate",
+    "ComplaintCommentRead",
+    "ComplaintCreate",
+    "ComplaintDetailRead",
+    "ComplaintPriority",
+    "ComplaintRead",
+    "ComplaintStatus",
+    "ComplaintStatusUpdateRequest",
     "FeePeriod",
     "FeeStructureCreate",
     "FeeStructureRead",
