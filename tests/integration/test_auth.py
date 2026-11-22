@@ -3,7 +3,7 @@
 import pytest
 from httpx import AsyncClient
 
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import create_access_token
 from app.models.user import User
 
 
@@ -94,7 +94,12 @@ async def test_login_validation_errors(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_refresh_token_endpoint(client: AsyncClient, student_user: User) -> None:
     """Verify refresh endpoint issues a new token pair."""
-    refresh_token = create_refresh_token(user_id=student_user.id, role="student")
+    login_resp = await client.post(
+        "/api/v1/auth/login",
+        json={"email": student_user.email, "password": "StudentPass123"},
+    )
+    assert login_resp.status_code == 200
+    refresh_token = login_resp.json()["refresh_token"]
 
     resp = await client.post(
         "/api/v1/auth/refresh",

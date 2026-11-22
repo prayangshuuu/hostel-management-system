@@ -159,6 +159,9 @@ async def test_update_and_deactivate_user(
     assert resp_deact.json()["is_active"] is False
 
     # Deactivated user cannot log in
+    from app.core.rate_limit import limiter
+
+    limiter.reset()
     resp_login = await client.post(
         "/api/v1/auth/login",
         json={"email": student_user.email, "password": "StudentPass123"},

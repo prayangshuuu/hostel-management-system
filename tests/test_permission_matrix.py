@@ -588,6 +588,8 @@ PUBLIC_PATHS = {
     "/api/v1/health",
     "/api/v1/auth/login",
     "/api/v1/auth/refresh",
+    # logout is stateless-friendly: accepts optional token, returns 200 with no creds
+    "/api/v1/auth/logout",
 }
 
 STUDENT_ONLY_PREFIXES = (

@@ -1,5 +1,6 @@
 """Unit tests for AuthService business logic."""
 
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import UnauthorizedError, ValidationAppError
 from app.core.security import create_access_token, create_refresh_token, hash_password
 from app.models.user import User, UserRole
+from app.repositories.auth_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
 
@@ -99,9 +101,9 @@ async def test_auth_service_refresh_token_flow(db_session: AsyncSession) -> None
     )
     await repo.create(user)
 
-    refresh_token = create_refresh_token(user_id=user.id, role="warden")
     service = AuthService(repo)
-    new_tokens = await service.refresh_token(refresh_token)
+    auth_resp = await service.authenticate("refresh_flow@example.com", "ValidPassword123")
+    new_tokens = await service.refresh_token(auth_resp.refresh_token)
 
     assert new_tokens.access_token is not None
     assert new_tokens.refresh_token is not None
@@ -183,8 +185,21 @@ async def test_auth_service_refresh_token_edge_cases(db_session: AsyncSession) -
         await service.refresh_token(bad_uuid_token)
     assert exc_info.value.code == "INVALID_TOKEN"
 
+    token_repo = RefreshTokenRepository(db_session)
+
     # User not found
-    unknown_user_token = create_refresh_token(user_id=uuid4(), role="student")
+    unknown_id = uuid4()
+    unknown_jti = uuid4().hex
+    unknown_fam = uuid4()
+    unknown_user_token = create_refresh_token(
+        user_id=unknown_id, role="student", jti=unknown_jti, family_id=unknown_fam
+    )
+    await token_repo.create(
+        user_id=unknown_id,
+        jti=unknown_jti,
+        family_id=unknown_fam,
+        expires_at=datetime.now(UTC) + timedelta(days=7),
+    )
     with pytest.raises(UnauthorizedError) as exc_not_found:
         await service.refresh_token(unknown_user_token)
     assert exc_not_found.value.code == "USER_NOT_FOUND"
@@ -200,7 +215,17 @@ async def test_auth_service_refresh_token_edge_cases(db_session: AsyncSession) -
     )
     await repo.create(inactive_user)
 
-    inactive_token = create_refresh_token(user_id=inactive_user.id, role="student")
+    inactive_jti = uuid4().hex
+    inactive_fam = uuid4()
+    inactive_token = create_refresh_token(
+        user_id=inactive_user.id, role="student", jti=inactive_jti, family_id=inactive_fam
+    )
+    await token_repo.create(
+        user_id=inactive_user.id,
+        jti=inactive_jti,
+        family_id=inactive_fam,
+        expires_at=datetime.now(UTC) + timedelta(days=7),
+    )
     with pytest.raises(UnauthorizedError) as exc_inactive:
         await service.refresh_token(inactive_token)
     assert exc_inactive.value.code == "INACTIVE_USER"

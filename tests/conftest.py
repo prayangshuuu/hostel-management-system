@@ -13,11 +13,18 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import StaticPool
 
+from app.core.rate_limit import limiter
 from app.core.security import create_access_token, hash_password
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
 from app.models.user import User, UserRole
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter() -> None:
+    """Reset the in-memory slowapi limiter before every test."""
+    limiter.reset()
 
 
 @pytest.fixture

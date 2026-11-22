@@ -29,10 +29,11 @@ async def test_request_id_echoed_when_provided(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_request_timing_logged(client: AsyncClient, caplog: pytest.LogCaptureFixture) -> None:
+async def test_request_timing_logged(client: AsyncClient) -> None:
     """Verify that request timing and method are logged with request ID."""
     logger = logging.getLogger("app.middleware.request")
     logger.setLevel(logging.INFO)
+    logger.disabled = False
 
     class RecordHandler(logging.Handler):
         def __init__(self) -> None:
