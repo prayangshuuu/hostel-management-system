@@ -2,9 +2,9 @@
 
 import json
 from functools import lru_cache
-from typing import Any
+from typing import Any, Self
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,6 +36,34 @@ class Settings(BaseSettings):
     VISIT_END: str = "20:00"
 
     MEAL_OPTOUT_CUTOFF_HOURS: int = 12
+
+    # Security & Lockout
+    FAILED_LOGIN_LIMIT: int = 5
+    LOCKOUT_DURATION_MINUTES: int = 15
+    ENABLE_DOCS: bool = False
+    MAX_REQUEST_BODY_SIZE: int = 5 * 1024 * 1024  # 5MB
+
+    # Database Pool Settings
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+    DB_POOL_PRE_PING: bool = True
+
+    @model_validator(mode="after")
+    def validate_production_secret_key(self) -> Self:
+        """Validate SECRET_KEY strength and safety when running in production environment."""
+        if self.APP_ENV == "production":
+            lowered = self.SECRET_KEY.lower()
+            if (
+                len(self.SECRET_KEY) < 32
+                or "insecure" in lowered
+                or "dev-secret" in lowered
+                or self.SECRET_KEY == "insecure-dev-secret-key-change-in-production"  # noqa: S105 # nosec B105 # nosec B105
+            ):
+                raise ValueError(
+                    "In production, SECRET_KEY must be at least 32 characters long "
+                    "and cannot contain 'insecure', 'dev-secret', or default values."
+                )
+        return self
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

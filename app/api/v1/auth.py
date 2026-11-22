@@ -1,24 +1,31 @@
 """Authentication and session endpoints."""
 
+import logging
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_user, get_db
 from app.core.exceptions import ValidationAppError
+from app.core.rate_limit import get_login_rate_limit_key, limiter
+from app.core.security import decode_token
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
+    LogoutRequest,
     RefreshTokenRequest,
     TokenResponse,
 )
 from app.schemas.user import UserRead
 from app.services.auth_service import AuthService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -47,8 +54,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
         }
     },
 )
+@limiter.limit("5/minute", key_func=get_login_rate_limit_key)
 async def login(
     request: Request,
+    response: Response,
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
     """Authenticate via JSON credentials or OAuth2 form-urlencoded parameters."""
@@ -108,6 +117,36 @@ async def refresh_token(
     """Exchange a valid refresh token for a fresh access + refresh token pair."""
     auth_service = AuthService(UserRepository(session))
     return await auth_service.refresh_token(refresh_token=body.refresh_token)
+
+
+@router.post(
+    "/logout",
+    summary="Log out and invalidate session",
+)
+async def logout(
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    body: LogoutRequest | None = None,
+) -> dict[str, str]:
+    """Revoke refresh token family via provided refresh token or current bearer credentials."""
+    auth_service = AuthService(UserRepository(session))
+    refresh_token = body.refresh_token if body else None
+    user_id: UUID | None = None
+
+    if not refresh_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+            try:
+                payload = decode_token(token)
+                sub = payload.get("sub")
+                if sub:
+                    user_id = UUID(sub)
+            except Exception as exc:
+                logger.debug("Bearer token decoding failed during logout: %s", exc)
+
+    await auth_service.logout(refresh_token=refresh_token, user_id=user_id)
+    return {"message": "Logged out successfully"}
 
 
 @router.get(

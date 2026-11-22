@@ -88,6 +88,42 @@ class UnauthorizedError(AppException):
         )
 
 
+class AuthenticationError(UnauthorizedError):
+    """Raised when authentication fails (credentials, lockout, or token revocation)."""
+
+    def __init__(
+        self,
+        message: str = "Authentication failed",
+        code: str = "AUTHENTICATION_FAILED",
+        status_code: int = 401,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code=code,
+            details=details,
+        )
+        self.status_code = status_code
+
+
+class RateLimitExceededError(AppException):
+    """Raised when rate limit is exceeded."""
+
+    def __init__(
+        self,
+        message: str = "Too many requests",
+        code: str = "RATE_LIMIT_EXCEEDED",
+        status_code: int = 429,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code=code,
+            status_code=status_code,
+            details=details,
+        )
+
+
 class ValidationAppError(AppException):
     """Raised when business validation fails outside request schema parsing."""
 

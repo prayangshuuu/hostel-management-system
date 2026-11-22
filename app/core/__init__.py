@@ -3,10 +3,12 @@
 from app.core.config import get_settings, settings
 from app.core.exceptions import (
     AppException,
+    AuthenticationError,
     BusinessRuleError,
     ConflictError,
     ForbiddenError,
     NotFoundError,
+    RateLimitExceededError,
     UnauthorizedError,
     ValidationAppError,
 )
@@ -21,10 +23,12 @@ from app.core.security import (
 
 __all__ = [
     "AppException",
+    "AuthenticationError",
     "BusinessRuleError",
     "ConflictError",
     "ForbiddenError",
     "NotFoundError",
+    "RateLimitExceededError",
     "UnauthorizedError",
     "ValidationAppError",
     "create_access_token",
