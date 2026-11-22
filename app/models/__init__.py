@@ -1,6 +1,7 @@
 """SQLAlchemy domain models."""
 
 from app.models.allocation import Allocation, AllocationStatus
+from app.models.audit import AuditLog
 from app.models.billing import (
     FeePeriod,
     FeeStructure,
@@ -35,6 +36,7 @@ __all__ = [
     "AllocationStatus",
     "AttendanceLog",
     "AttendanceType",
+    "AuditLog",
     "Bed",
     "Block",
     "Complaint",

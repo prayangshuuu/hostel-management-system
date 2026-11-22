@@ -1,6 +1,7 @@
 """Database repositories for data access."""
 
 from app.repositories.allocation_repository import AllocationRepository
+from app.repositories.audit_repository import AuditLogRepository
 from app.repositories.billing_repository import (
     FeeStructureRepository,
     InvoiceRepository,
@@ -35,6 +36,7 @@ from app.repositories.user_repository import UserRepository
 __all__ = [
     "AllocationRepository",
     "AttendanceRepository",
+    "AuditLogRepository",
     "BedRepository",
     "BlockRepository",
     "ComplaintCommentRepository",

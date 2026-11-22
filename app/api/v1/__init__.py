@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.v1.allocations import router as allocations_router
 from app.api.v1.attendance import router as attendance_router
+from app.api.v1.audit_logs import router as audit_logs_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.billing import router as billing_router
 from app.api.v1.blocks import router as blocks_router
@@ -34,5 +35,6 @@ api_router.include_router(leaves_router)
 api_router.include_router(visitors_router)
 api_router.include_router(mess_router)
 api_router.include_router(notices_router)
+api_router.include_router(audit_logs_router)
 
 __all__ = ["api_router"]

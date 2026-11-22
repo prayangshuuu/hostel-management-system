@@ -8,6 +8,7 @@ from app.schemas.allocation import (
     AllocationVacateRequest,
     OccupantRead,
 )
+from app.schemas.audit import AuditLogRead
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -115,6 +116,7 @@ __all__ = [
     "AttendanceActionRequest",
     "AttendanceRead",
     "AttendanceType",
+    "AuditLogRead",
     "BedRead",
     "BlockBase",
     "BlockCreate",

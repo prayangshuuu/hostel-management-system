@@ -1,6 +1,7 @@
 """Business logic services."""
 
 from app.services.allocation_service import AllocationService
+from app.services.audit_service import AuditService
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.complaint_service import ComplaintService
@@ -14,6 +15,7 @@ from app.services.user_service import UserService
 
 __all__ = [
     "AllocationService",
+    "AuditService",
     "AuthService",
     "BillingService",
     "ComplaintService",
