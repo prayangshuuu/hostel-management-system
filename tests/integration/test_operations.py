@@ -572,3 +572,63 @@ async def test_visiting_hours_closed_rejection_api(
     finally:
         settings.VISIT_START = orig_start
         settings.VISIT_END = orig_end
+
+
+@pytest.mark.asyncio
+async def test_no_active_allocation_blocks_operations(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Verify check-in, leave application, and visitor entry return 400 NO_ACTIVE_ALLOCATION."""
+    _h1, _h2, admin, _warden, _u1, _prof1, _a1, _u2, prof2, alloc2 = await _create_full_setup(
+        db_session
+    )
+    admin_hdr = _headers(admin)
+
+    # End allocation 2
+    alloc2.status = AllocationStatus.ENDED
+    await db_session.commit()
+
+    # 1. Check-in blocked (400 NO_ACTIVE_ALLOCATION)
+    resp = await client.post(
+        "/api/v1/attendance/check-in",
+        headers=admin_hdr,
+        json={"student_id": str(prof2.id)},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "NO_ACTIVE_ALLOCATION"
+
+    # 2. Leave request blocked (400 NO_ACTIVE_ALLOCATION)
+    resp = await client.post(
+        "/api/v1/leaves",
+        headers=admin_hdr,
+        json={
+            "student_id": str(prof2.id),
+            "from_date": "2026-12-05",
+            "to_date": "2026-12-10",
+            "reason": "Going home",
+        },
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "NO_ACTIVE_ALLOCATION"
+
+    # 3. Visitor check-in blocked (400 NO_ACTIVE_ALLOCATION)
+    orig_start = settings.VISIT_START
+    orig_end = settings.VISIT_END
+    settings.VISIT_START = "00:00"
+    settings.VISIT_END = "23:59"
+    try:
+        resp = await client.post(
+            "/api/v1/visitors",
+            headers=admin_hdr,
+            json={
+                "student_id": str(prof2.id),
+                "name": "Visitor Guest",
+                "phone": "+999111",
+                "relation": "Friend",
+            },
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error"]["code"] == "NO_ACTIVE_ALLOCATION"
+    finally:
+        settings.VISIT_START = orig_start
+        settings.VISIT_END = orig_end

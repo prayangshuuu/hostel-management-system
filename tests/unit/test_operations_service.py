@@ -248,6 +248,34 @@ async def test_attendance_no_active_allocation_and_warden_scoping(
         await service.check_in(AttendanceActionRequest(student_id=prof2.id), current_user=admin)
     assert exc_alloc.value.code == "NO_ACTIVE_ALLOCATION"
 
+    # Leave application without active allocation blocked
+    with pytest.raises(BusinessRuleError) as exc_leave_alloc:
+        await service.create_leave_request(
+            LeaveRequestCreate(
+                student_id=prof2.id,
+                from_date=date(2026, 12, 1),
+                to_date=date(2026, 12, 5),
+                reason="Holiday",
+            ),
+            current_user=admin,
+            current_date=date(2026, 11, 25),
+        )
+    assert exc_leave_alloc.value.code == "NO_ACTIVE_ALLOCATION"
+
+    # Visitor entry without active allocation blocked
+    with pytest.raises(BusinessRuleError) as exc_vis_alloc:
+        await service.check_in_visitor(
+            VisitorCreate(
+                student_id=prof2.id,
+                name="Visitor X",
+                phone="+123456789",
+                relation="Friend",
+            ),
+            current_user=admin,
+            check_in_time=datetime(2026, 11, 22, 14, 0, tzinfo=UTC),
+        )
+    assert exc_vis_alloc.value.code == "NO_ACTIVE_ALLOCATION"
+
 
 @pytest.mark.asyncio
 async def test_attendance_present_students_and_my_attendance(
