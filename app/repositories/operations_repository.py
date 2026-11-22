@@ -273,6 +273,21 @@ class LeaveRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_approved_leaves_for_students_on_date(
+        self, student_ids: builtins.list[UUID], target_date: date
+    ) -> builtins.list[LeaveRequest]:
+        """Fetch approved leave requests active on target date for given student IDs."""
+        if not student_ids:
+            return []
+        stmt = select(LeaveRequest).where(
+            LeaveRequest.student_id.in_(student_ids),
+            LeaveRequest.status == LeaveStatus.APPROVED,
+            LeaveRequest.from_date <= target_date,
+            LeaveRequest.to_date >= target_date,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def list(
         self,
         params: PaginationParams,

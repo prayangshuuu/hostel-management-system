@@ -1,4 +1,4 @@
-"""Mess menu Pydantic schemas."""
+"""Mess menu and meal opt-out Pydantic schemas."""
 
 from __future__ import annotations
 
@@ -12,6 +12,10 @@ from app.models.mess import MealType
 
 __all__ = [
     "DailyMenuRead",
+    "HostelDailyHeadcountResponse",
+    "MealHeadcountItem",
+    "MealOptOutCreate",
+    "MealOptOutRead",
     "MealType",
     "MessMenuBulkUpdateRequest",
     "MessMenuItemCreate",
@@ -82,3 +86,40 @@ class DailyMenuRead(BaseModel):
     date: date
     day_of_week: int
     meals: dict[str, list[str]] = Field(default_factory=dict)
+
+
+class MealOptOutCreate(BaseModel):
+    """Payload for opting out of a specific meal."""
+
+    date: date
+    meal_type: MealType
+
+
+class MealOptOutRead(BaseModel):
+    """Representation of a student meal opt-out."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    student_id: UUID
+    date: date
+    meal_type: MealType
+    created_at: datetime
+
+
+class MealHeadcountItem(BaseModel):
+    """Headcount breakdown for a specific meal."""
+
+    meal_type: MealType
+    allocated_count: int
+    opted_out_count: int
+    on_leave_count: int
+    expected_count: int
+
+
+class HostelDailyHeadcountResponse(BaseModel):
+    """Daily expected meal headcount for a hostel."""
+
+    hostel_id: UUID
+    date: date
+    meals: list[MealHeadcountItem] = Field(default_factory=list)

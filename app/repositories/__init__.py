@@ -15,7 +15,10 @@ from app.repositories.hostel_repository import (
     HostelRepository,
     WardenAssignmentRepository,
 )
-from app.repositories.mess_repository import MessMenuRepository
+from app.repositories.mess_repository import (
+    MealOptOutRepository,
+    MessMenuRepository,
+)
 from app.repositories.operations_repository import (
     AttendanceRepository,
     LeaveRepository,
@@ -36,6 +39,7 @@ __all__ = [
     "HostelRepository",
     "InvoiceRepository",
     "LeaveRepository",
+    "MealOptOutRepository",
     "MessMenuRepository",
     "PaymentRepository",
     "RoomRepository",

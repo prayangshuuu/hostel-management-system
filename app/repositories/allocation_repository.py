@@ -103,6 +103,27 @@ class AllocationRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_active_student_ids_for_hostel_on_date(
+        self, hostel_id: UUID, target_date: date
+    ) -> builtins.list[UUID]:
+        """Fetch active allocated student IDs in a hostel on a specific date."""
+        stmt = (
+            select(Allocation.student_id)
+            .join(Bed, Allocation.bed_id == Bed.id)
+            .join(Room, Bed.room_id == Room.id)
+            .join(Block, Room.block_id == Block.id)
+            .join(StudentProfile, Allocation.student_id == StudentProfile.id)
+            .where(
+                Block.hostel_id == hostel_id,
+                Allocation.status == AllocationStatus.ACTIVE,
+                Allocation.start_date <= target_date,
+                or_(Allocation.end_date.is_(None), Allocation.end_date >= target_date),
+                StudentProfile.is_deleted.is_(False),
+            )
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def has_active_allocations_for_room(self, room_id: UUID) -> bool:
         """Check if any active allocation exists for the given room."""
         stmt = (

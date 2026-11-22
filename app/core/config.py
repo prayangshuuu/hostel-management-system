@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     VISIT_START: str = "08:00"
     VISIT_END: str = "20:00"
 
+    MEAL_OPTOUT_CUTOFF_HOURS: int = 12
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> list[str]:

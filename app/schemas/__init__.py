@@ -57,6 +57,10 @@ from app.schemas.hostel import (
 )
 from app.schemas.mess import (
     DailyMenuRead,
+    HostelDailyHeadcountResponse,
+    MealHeadcountItem,
+    MealOptOutCreate,
+    MealOptOutRead,
     MealType,
     MessMenuBulkUpdateRequest,
     MessMenuItemCreate,
@@ -128,6 +132,7 @@ __all__ = [
     "HealthResponse",
     "HostelBase",
     "HostelCreate",
+    "HostelDailyHeadcountResponse",
     "HostelRead",
     "HostelUpdate",
     "InvoiceDetailRead",
@@ -140,6 +145,9 @@ __all__ = [
     "LeaveReviewRequest",
     "LeaveStatus",
     "LoginRequest",
+    "MealHeadcountItem",
+    "MealOptOutCreate",
+    "MealOptOutRead",
     "MealType",
     "MessMenuBulkUpdateRequest",
     "MessMenuItemCreate",
