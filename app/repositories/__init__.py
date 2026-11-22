@@ -29,18 +29,33 @@ from app.repositories.operations_repository import (
     LeaveRepository,
     VisitorRepository,
 )
+from app.repositories.report_repository import (
+    AttendanceReportData,
+    ComplaintsReportData,
+    DashboardSummaryData,
+    DefaulterReportRow,
+    OccupancyReportRow,
+    ReportRepository,
+    RevenueReportRow,
+    StudentDashboardData,
+    StudentRoomInfo,
+)
 from app.repositories.room_repository import BedRepository, RoomRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
 
 __all__ = [
     "AllocationRepository",
+    "AttendanceReportData",
     "AttendanceRepository",
     "AuditLogRepository",
     "BedRepository",
     "BlockRepository",
     "ComplaintCommentRepository",
     "ComplaintRepository",
+    "ComplaintsReportData",
+    "DashboardSummaryData",
+    "DefaulterReportRow",
     "FeeStructureRepository",
     "HostelRepository",
     "InvoiceRepository",
@@ -49,9 +64,14 @@ __all__ = [
     "MessMenuRepository",
     "NoticeReadRepository",
     "NoticeRepository",
+    "OccupancyReportRow",
     "PaymentRepository",
+    "ReportRepository",
+    "RevenueReportRow",
     "RoomRepository",
+    "StudentDashboardData",
     "StudentRepository",
+    "StudentRoomInfo",
     "UserRepository",
     "VisitorRepository",
     "WardenAssignmentRepository",
