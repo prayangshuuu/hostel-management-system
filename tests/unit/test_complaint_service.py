@@ -694,4 +694,3 @@ async def test_reopen_window_mock_time(
                 stu1_user,
             )
         assert exc.value.code == "REOPEN_WINDOW_EXPIRED"
-
