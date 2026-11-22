@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]
     LOG_LEVEL: str = "INFO"
 
+    VISIT_START: str = "08:00"
+    VISIT_END: str = "20:00"
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> list[str]:

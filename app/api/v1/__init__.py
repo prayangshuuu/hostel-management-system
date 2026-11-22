@@ -13,6 +13,7 @@ from app.api.v1.leaves import router as leaves_router
 from app.api.v1.rooms import router as rooms_router
 from app.api.v1.students import router as students_router
 from app.api.v1.users import router as users_router
+from app.api.v1.visitors import router as visitors_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
@@ -26,5 +27,6 @@ api_router.include_router(allocations_router)
 api_router.include_router(billing_router)
 api_router.include_router(attendance_router)
 api_router.include_router(leaves_router)
+api_router.include_router(visitors_router)
 
 __all__ = ["api_router"]
