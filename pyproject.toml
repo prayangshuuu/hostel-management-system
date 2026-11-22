@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.16.3",
     "pyjwt>=2.15.1",
     "python-multipart>=0.0.34",
+    "slowapi>=0.1.10",
     "sqlalchemy[asyncio]>=2.1.9",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -24,9 +25,12 @@ package = false
 [dependency-groups]
 dev = [
     "aiosqlite>=0.22.1",
+    "bandit>=1.9.4",
     "httpx>=0.28.1",
     "hypothesis>=6.170.17",
+    "locust>=2.47.0",
     "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
