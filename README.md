@@ -54,9 +54,7 @@ uv run mypy app
 - [x] Student Profiles (`/api/v1/students`, `/api/v1/students/me`) ✅
 - [x] Allocations (`/api/v1/allocations`, `/api/v1/rooms/{id}/occupants`) ✅
 - [x] Billing (/api/v1/fee-structures, /api/v1/invoices, /api/v1/payments) ✅
-- [ ] Attendance
-- [ ] Leave Requests
-- [ ] Visitors
+- [x] Attendance, Leave, Visitors (`/api/v1/attendance`, `/api/v1/leaves`, `/api/v1/visitors`) ✅
 - [ ] Complaints
 - [ ] Mess / Meal Plans
 - [ ] Notices
@@ -76,3 +74,5 @@ uv run mypy app
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime in days | `7` |
 | `CORS_ORIGINS` | Allowed CORS origins (JSON array or comma-separated) | `["*"]` |
 | `LOG_LEVEL` | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) | `INFO` |
+| `VISIT_START` | Daily hostel visiting hours start window (`HH:MM`) | `08:00` |
+| `VISIT_END` | Daily hostel visiting hours end window (`HH:MM`) | `20:00` |
