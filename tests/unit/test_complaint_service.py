@@ -582,3 +582,116 @@ async def test_status_machine_and_reopen_window(
             ComplaintStatusUpdateRequest(status=ComplaintStatus.OPEN),
             warden_h1,
         )
+
+
+@pytest.mark.asyncio
+async def test_each_invalid_status_transition_raises_error(
+    db_session: AsyncSession, setup_env: dict[str, object]
+) -> None:
+    """Explicitly verify that each invalid status transition raises BusinessRuleError."""
+    service = ComplaintService(db_session)
+    stu1_user = setup_env["stu1_user"]
+    admin = setup_env["admin"]
+    assert isinstance(stu1_user, User)
+    assert isinstance(admin, User)
+
+    complaint = await service.create_complaint(
+        ComplaintCreate(
+            title="Broken faucet",
+            description="Leaking water",
+            category=ComplaintCategory.PLUMBING,
+        ),
+        stu1_user,
+    )
+
+    allowed_transitions: dict[ComplaintStatus, set[ComplaintStatus]] = {
+        ComplaintStatus.OPEN: {ComplaintStatus.IN_PROGRESS, ComplaintStatus.CLOSED},
+        ComplaintStatus.IN_PROGRESS: {ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED},
+        ComplaintStatus.RESOLVED: {ComplaintStatus.CLOSED, ComplaintStatus.OPEN},
+        ComplaintStatus.CLOSED: set(),
+    }
+
+    all_statuses = list(ComplaintStatus)
+    invalid_count = 0
+    for source_status in all_statuses:
+        for target_status in all_statuses:
+            if target_status not in allowed_transitions[source_status]:
+                invalid_count += 1
+                complaint.status = source_status
+                if source_status == ComplaintStatus.RESOLVED:
+                    complaint.resolved_at = datetime.now(UTC)
+                else:
+                    complaint.resolved_at = None
+                await db_session.flush()
+
+                with pytest.raises(BusinessRuleError) as exc_info:
+                    await service.update_status(
+                        complaint.id,
+                        ComplaintStatusUpdateRequest(status=target_status),
+                        admin,
+                    )
+                assert exc_info.value.code == "INVALID_STATUS_TRANSITION", (
+                    f"Expected INVALID_STATUS_TRANSITION from {source_status} to {target_status}"
+                )
+    assert invalid_count == 10
+
+
+@pytest.mark.asyncio
+async def test_reopen_window_mock_time(
+    db_session: AsyncSession, setup_env: dict[str, object]
+) -> None:
+    """Verify 7-day reopen window: allowed within 7 days, blocked after 7 days."""
+    from unittest.mock import patch
+
+    service = ComplaintService(db_session)
+    stu1_user = setup_env["stu1_user"]
+    warden_h1 = setup_env["warden_h1"]
+    assert isinstance(stu1_user, User)
+    assert isinstance(warden_h1, User)
+
+    complaint = await service.create_complaint(
+        ComplaintCreate(
+            title="Squeaky door",
+            description="Hinges need oil",
+            category=ComplaintCategory.OTHER,
+        ),
+        stu1_user,
+    )
+    # Transition to IN_PROGRESS then RESOLVED
+    await service.update_status(
+        complaint.id,
+        ComplaintStatusUpdateRequest(status=ComplaintStatus.IN_PROGRESS),
+        warden_h1,
+    )
+    resolved_time = datetime(2026, 11, 1, 12, 0, 0, tzinfo=UTC)
+    complaint.status = ComplaintStatus.RESOLVED
+    complaint.resolved_at = resolved_time
+    await db_session.flush()
+
+    # Day 6: reopen allowed (within 7 days)
+    with patch("app.services.complaint_service.datetime") as mock_dt:
+        mock_dt.now.return_value = resolved_time + timedelta(days=6)
+        reopened = await service.update_status(
+            complaint.id,
+            ComplaintStatusUpdateRequest(status=ComplaintStatus.OPEN),
+            stu1_user,
+        )
+        assert reopened.status == ComplaintStatus.OPEN
+        assert reopened.resolved_at is None
+
+    # Resolve again
+    complaint.status = ComplaintStatus.RESOLVED
+    complaint.resolved_at = resolved_time
+    await db_session.flush()
+
+    # Day 8: reopen blocked (after 7 days)
+    with patch("app.services.complaint_service.datetime") as mock_dt:
+        mock_dt.now.return_value = resolved_time + timedelta(days=8)
+        with pytest.raises(BusinessRuleError) as exc:
+            await service.update_status(
+                complaint.id,
+                ComplaintStatusUpdateRequest(status=ComplaintStatus.OPEN),
+                stu1_user,
+            )
+        assert exc.value.code == "REOPEN_WINDOW_EXPIRED"
+
