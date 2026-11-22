@@ -15,6 +15,17 @@ FastAPI backend REST API for managing university and private hostels.
 - Pytest, Ruff, Mypy
 
 ## Quick Start
+
+### Option A: Docker (Recommended)
+```bash
+# Build and launch PostgreSQL and API with automatic migrations
+docker compose up -d --build
+
+# Run automated smoke test
+./scripts/smoke.sh
+```
+
+### Option B: Local Development
 ```bash
 # Start PostgreSQL database
 docker compose up -d db
@@ -81,6 +92,10 @@ uv run mypy app
 - [x] Reports & Dashboard (`/api/v1/dashboard/summary`, `/api/v1/reports/*`, `/api/v1/students/me/dashboard`) ✅
 - [x] Test Hardening & Bug Hunt Sweep (96% Coverage, Permission Matrix, Property Testing, E2E Scenarios, N+1 Query Elimination, Reversible Migrations) ✅
 - [x] Security & Performance Hardening (Rate limiting, Account lockout, Refresh token rotation/revocation, Security headers, DB indexes, GZip, Load testing) ✅
+- [x] Docker, CI, Final Audit & Release v1.0.0 (Multi-stage Dockerfile, CI pipeline, OpenAPI export, Release v1.0.0) ✅
+
+## License
+MIT License.
 
 ## Security
 
@@ -109,7 +124,7 @@ uv run mypy app
 | Variable | Description | Default |
 |---|---|---|
 | `APP_NAME` | Application name for OpenAPI schema | `Hostel Management System` |
-| `APP_VERSION` | Application version | `0.1.0` |
+| `APP_VERSION` | Application version | `1.0.0` |
 | `APP_ENV` | Application environment (`development`, `staging`, `production`) | `development` |
 | `DEBUG` | Enable SQLAlchemy debug query logging | `false` |
 | `DATABASE_URL` | PostgreSQL async connection URL | `postgresql+asyncpg://postgres:postgres@localhost:5432/hostel_db` |
