@@ -11,6 +11,7 @@ from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPkMixin
 from app.models.user import User
 
 if TYPE_CHECKING:
+    from app.models.billing import FeeStructure
     from app.models.room import Room
 
 
@@ -43,6 +44,11 @@ class Hostel(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
     )
     warden_assignments: Mapped[list["WardenAssignment"]] = relationship(
         "WardenAssignment",
+        back_populates="hostel",
+        cascade="all, delete-orphan",
+    )
+    fee_structures: Mapped[list["FeeStructure"]] = relationship(
+        "FeeStructure",
         back_populates="hostel",
         cascade="all, delete-orphan",
     )

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, UUIDPkMixin
 
 if TYPE_CHECKING:
+    from app.models.billing import Invoice
     from app.models.room import Bed
     from app.models.student import StudentProfile
 
@@ -78,6 +79,10 @@ class Allocation(Base, UUIDPkMixin, TimestampMixin):
     bed: Mapped[Bed] = relationship(
         "Bed",
         back_populates="allocations",
+    )
+    invoices: Mapped[list[Invoice]] = relationship(
+        "Invoice",
+        back_populates="allocation",
     )
 
     def __repr__(self) -> str:

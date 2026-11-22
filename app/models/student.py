@@ -13,6 +13,7 @@ from app.models.hostel import GenderType
 
 if TYPE_CHECKING:
     from app.models.allocation import Allocation
+    from app.models.billing import Invoice
     from app.models.user import User
 
 
@@ -67,6 +68,10 @@ class StudentProfile(Base, UUIDPkMixin, TimestampMixin, SoftDeleteMixin):
         back_populates="student",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+    invoices: Mapped[list[Invoice]] = relationship(
+        "Invoice",
+        back_populates="student",
     )
 
     @property
