@@ -882,4 +882,3 @@ async def test_student_self_service_service_layer(
     assert my_balance.total_billed == Decimal("1200.00")
     assert my_balance.total_paid == Decimal("200.00")
     assert my_balance.current_balance == Decimal("1000.00")
-

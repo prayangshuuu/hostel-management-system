@@ -877,4 +877,3 @@ async def test_invoice_proration_scenarios_api(
     assert invoices_by_student[str(s2.id)] == "1500.00"
     # Mid-month end: 10/30 * 3000.00 = 1000.00
     assert invoices_by_student[str(s3.id)] == "1000.00"
-
