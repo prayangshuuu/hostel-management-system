@@ -1407,3 +1407,79 @@ async def test_complaint_service_and_report_service_hardening() -> None:
     dash = await report_service.get_student_dashboard(student)
     assert dash.balance == Decimal("0.00")
     assert dash.open_complaints_count == 0
+
+
+def test_coverage_edge_cases():
+    """Verify edge case schema methods and utility functions for coverage completeness."""
+    from starlette.requests import Request
+
+    from app.core.csrf import verify_csrf
+    from app.core.exceptions import RateLimitExceededError
+    from app.schemas.hostel import BlockBase, BlockUpdate, HostelBase, HostelUpdate
+    from app.schemas.notice import NoticeRead
+    from app.schemas.report import DashboardSummaryRead
+    from app.schemas.student import StudentCreate
+    from app.services.audit_service import AuditService
+
+    # 1. Audit payload sanitizer UUID and datetime
+    u = uuid4()
+    now = datetime.now(UTC)
+    assert AuditService.sanitize_payload(u) == str(u)
+    assert AuditService.sanitize_payload(now) == now.isoformat()
+
+    # 2. Rate limit exception
+    err = RateLimitExceededError()
+    assert err.status_code == 429
+
+    # 3. CSRF GET bypass
+    req = Request({"type": "http", "method": "GET", "path": "/"})
+    verify_csrf(req)
+
+    # 4. Student password strength branches
+    with pytest.raises(ValueError, match="at least one letter"):
+        StudentCreate.check_password_policy("12345678")
+    with pytest.raises(ValueError, match="at least one number"):
+        StudentCreate.check_password_policy("abcdefgh")
+
+    # 5. Hostel whitespace strip non-string fallback
+    assert HostelBase.strip_whitespace(123) == 123
+    assert HostelUpdate.strip_whitespace(123) == 123
+    assert BlockBase.strip_whitespace(456) == 456
+    assert BlockUpdate.strip_whitespace(456) == 456
+
+    # 6. NoticeRead dict before validator
+    nid = uuid4()
+    nr = NoticeRead.model_validate(
+        {
+            "id": nid,
+            "title": "Test",
+            "body": "Notice body",
+            "audience": "all",
+            "is_pinned": False,
+            "created_at": now,
+            "published_at": now,
+            "updated_at": now,
+            "author_id": uuid4(),
+        }
+    )
+    assert nr.id == nid
+
+    # 7. DashboardSummaryRead open_complaints_count property
+    dash = DashboardSummaryRead(
+        total_hostels=2,
+        total_rooms=10,
+        total_beds=50,
+        active_students=45,
+        total_capacity=100,
+        occupied_beds=50,
+        available_beds=50,
+        occupancy_rate=50.0,
+        pending_leaves=0,
+        open_complaints=5,
+        active_notices=2,
+        present_now=40,
+        invoices_due_this_month=Decimal("0.00"),
+        collected_this_month=Decimal("0.00"),
+        outstanding_total=Decimal("0.00"),
+    )
+    assert dash.open_complaints_count == 5
