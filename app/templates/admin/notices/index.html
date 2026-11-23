@@ -1,0 +1,146 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Notices & Announcements | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Notice Board</h1>
+            <p class="text-sm text-zinc-500">Hostel bulletins, administrative broadcasts, and student notices</p>
+        </div>
+        <div>
+            <a href="/admin/notices/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Post Notice
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-4">
+        <form method="GET" action="/admin/notices" class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex items-center gap-2">
+                <label for="hostel_id" class="text-xs font-semibold text-zinc-500 shrink-0">Hostel:</label>
+                <select id="hostel_id" name="hostel_id" class="text-sm rounded-lg border-zinc-300 py-1.5 px-3">
+                    <option value="">All Hostels & Global</option>
+                    {% for h in hostels %}
+                    <option value="{{ h.id }}" {% if selected_hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label for="audience" class="text-xs font-semibold text-zinc-500 shrink-0">Audience:</label>
+                <select id="audience" name="audience" class="text-sm rounded-lg border-zinc-300 py-1.5 px-3">
+                    <option value="">All Audiences</option>
+                    {% for a in audiences %}
+                    <option value="{{ a.value }}" {% if selected_audience == a.value %}selected{% endif %}>{{ a.value|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm">
+                Filter Notices
+            </button>
+        </form>
+    </div>
+
+    <!-- Notices Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Notice</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Audience & Scope</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Publication Schedule</th>
+                        <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for item in notices %}
+                    {% set n = item.notice %}
+                    {% set st = item.status %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                {% if n.is_pinned %}
+                                <span class="text-amber-500" title="Pinned Notice">
+                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019L11 15.658V18h2a1 1 0 110 2H7a1 1 0 110-2h2v-2.342l-1.333-1.677A3.989 3.989 0 015 15c-.992 0-1.905-.36-2.617-.96a1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.789l1.599.8L9 4.323V3a1 1 0 011-1z" />
+                                    </svg>
+                                </span>
+                                {% endif %}
+                                <span class="font-bold text-zinc-900 text-sm">{{ n.title }}</span>
+                            </div>
+                            <p class="text-xs text-zinc-500 mt-1 line-clamp-1 max-w-md">{{ n.body }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-zinc-600">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded font-semibold bg-zinc-100 text-zinc-800">
+                                {{ n.audience.value|capitalize }}
+                            </span>
+                            <span class="block text-[11px] text-zinc-400 mt-0.5">
+                                {{ n.hostel.name if n.hostel else 'Global (All Hostels)' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                                {% if st == 'live' %}bg-emerald-100 text-emerald-800
+                                {% elif st == 'scheduled' %}bg-indigo-100 text-indigo-800
+                                {% else %}bg-zinc-100 text-zinc-600{% endif %}">
+                                {{ st|capitalize }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-zinc-500 font-mono">
+                            <p><span class="text-zinc-400">Pub:</span> {{ n.published_at|datetime_format }}</p>
+                            <p><span class="text-zinc-400">Exp:</span> {{ n.expires_at|datetime_format if n.expires_at else 'No expiry' }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <div class="inline-flex items-center gap-2">
+                                <a href="/admin/notices/{{ n.id }}/edit" class="text-xs font-semibold text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </a>
+                                <form action="/admin/notices/{{ n.id }}/delete" method="POST" onsubmit="return confirm('Delete this notice?');" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="text-xs font-semibold text-rose-600 hover:text-rose-900">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-zinc-400">
+                            No notices found matching this criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pages > 1 %}
+        <div class="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
+            <span class="text-xs text-zinc-500">Showing page {{ page }} of {{ pages }} ({{ total }} total)</span>
+            <div class="flex items-center gap-1">
+                {% if page > 1 %}
+                <a href="/admin/notices?page={{ page - 1 }}&size={{ size }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Previous</a>
+                {% endif %}
+                {% if page < pages %}
+                <a href="/admin/notices?page={{ page + 1 }}&size={{ size }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

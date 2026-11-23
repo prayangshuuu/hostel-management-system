@@ -1,0 +1,116 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{% if is_edit %}Edit Notice{% else %}New Notice{% endif %} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">
+                {% if is_edit %}Edit Notice Announcement{% else %}Create Notice Announcement{% endif %}
+            </h1>
+            <p class="text-sm text-zinc-500">Post announcements to residents, wardens, or campus-wide</p>
+        </div>
+        <a href="/admin/notices" class="text-xs font-semibold text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded-lg">
+            Back to Notices
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+        <form action="{% if is_edit %}/admin/notices/{{ notice.id }}/edit{% else %}/admin/notices{% endif %}" method="POST" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div>
+                <label for="title" class="block text-xs font-semibold text-zinc-700 mb-1">Notice Headline / Title <span class="text-rose-500">*</span></label>
+                <input type="text" id="title" name="title" value="{{ notice.title if notice else '' }}" required placeholder="e.g. Scheduled Power Outage & Generator Schedule"
+                    class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+            </div>
+
+            <!-- Body with Live Preview -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label for="body" class="block text-xs font-semibold text-zinc-700">Notice Body & Content <span class="text-rose-500">*</span></label>
+                    <div class="flex items-center gap-2 text-xs">
+                        <button type="button" onclick="document.getElementById('edit-pane').classList.remove('hidden'); document.getElementById('preview-pane').classList.add('hidden'); this.classList.add('font-bold', 'text-indigo-600'); document.getElementById('btn-preview').classList.remove('font-bold', 'text-indigo-600');"
+                            class="px-2 py-0.5 rounded font-bold text-indigo-600">Write</button>
+                        <button type="button" id="btn-preview" onclick="document.getElementById('edit-pane').classList.add('hidden'); document.getElementById('preview-pane').classList.remove('hidden'); document.getElementById('preview-content').innerText = document.getElementById('body').value; this.classList.add('font-bold', 'text-indigo-600');"
+                            class="px-2 py-0.5 rounded text-zinc-500 hover:text-zinc-900">Live Preview</button>
+                    </div>
+                </div>
+
+                <div id="edit-pane">
+                    <textarea id="body" name="body" rows="6" required placeholder="Type notice announcement content here..."
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 font-mono">{{ notice.body if notice else '' }}</textarea>
+                </div>
+                <div id="preview-pane" class="hidden bg-zinc-50 rounded-lg p-4 border border-zinc-200 min-h-[150px] text-sm text-zinc-800 whitespace-pre-wrap font-sans">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="audience" class="block text-xs font-semibold text-zinc-700 mb-1">Target Audience <span class="text-rose-500">*</span></label>
+                    <select id="audience" name="audience" required
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                        {% for a in audiences %}
+                        <option value="{{ a.value }}" {% if notice and notice.audience.value == a.value %}selected{% endif %}>
+                            {{ a.value|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="hostel_id" class="block text-xs font-semibold text-zinc-700 mb-1">Hostel Scope</label>
+                    <select id="hostel_id" name="hostel_id"
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                        {% if is_admin %}
+                        <option value="">Global / All Hostels</option>
+                        {% endif %}
+                        {% for h in hostels %}
+                        <option value="{{ h.id }}" {% if notice and notice.hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="published_at" class="block text-xs font-semibold text-zinc-700 mb-1">Publish Time (Leave blank for immediate)</label>
+                    <input type="datetime-local" id="published_at" name="published_at"
+                        value="{{ notice.published_at.strftime('%Y-%m-%dT%H:%M') if notice and notice.published_at else '' }}"
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                </div>
+
+                <div>
+                    <label for="expires_at" class="block text-xs font-semibold text-zinc-700 mb-1">Expiry Time (Optional)</label>
+                    <input type="datetime-local" id="expires_at" name="expires_at"
+                        value="{{ notice.expires_at.strftime('%Y-%m-%dT%H:%M') if notice and notice.expires_at else '' }}"
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="is_pinned" name="is_pinned" value="true" {% if notice and notice.is_pinned %}checked{% endif %}
+                    class="rounded border-zinc-300 text-amber-500 focus:ring-amber-500">
+                <label for="is_pinned" class="text-xs font-bold text-zinc-800 flex items-center gap-1.5 cursor-pointer">
+                    <svg class="h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019L11 15.658V18h2a1 1 0 110 2H7a1 1 0 110-2h2v-2.342l-1.333-1.677A3.989 3.989 0 015 15c-.992 0-1.905-.36-2.617-.96a1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.789l1.599.8L9 4.323V3a1 1 0 011-1z" />
+                    </svg>
+                    Pin this notice to top of resident dashboards
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-100">
+                <a href="/admin/notices" class="px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 rounded-lg">Cancel</a>
+                <button type="submit"
+                    class="px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                    {% if is_edit %}Save Changes{% else %}Publish Notice{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
