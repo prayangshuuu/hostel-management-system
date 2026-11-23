@@ -1,0 +1,108 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Weekly Mess Menu | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Mess Menu Planner</h1>
+            <p class="text-sm text-zinc-500">Weekly dietary schedule & kitchen menu management</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/mess/headcount" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-semibold text-sm shadow-sm transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Meal Headcount
+            </a>
+        </div>
+    </div>
+
+    <!-- Hostel Selector Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-4 flex items-center justify-between">
+        <form method="GET" action="/admin/mess" class="flex items-center gap-3">
+            <label for="hostel_id" class="text-xs font-semibold text-zinc-500">Select Hostel:</label>
+            <select id="hostel_id" name="hostel_id" onchange="this.form.submit()"
+                class="text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-1.5 px-3 font-semibold">
+                {% for h in hostels %}
+                <option value="{{ h.id }}" {% if selected_hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <span class="text-xs text-zinc-400">Save the whole week in one click</span>
+    </div>
+
+    <!-- Menu Editor Form -->
+    <form action="/admin/mess/update" method="POST" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="hostel_id" value="{{ selected_hostel_id }}">
+
+        <!-- Desktop 7 x 3 Grid (hidden on mobile, visible at md+) -->
+        <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-zinc-200">
+                    <thead class="bg-zinc-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-zinc-600 uppercase tracking-wider w-32">Day</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase tracking-wider">Breakfast (8:00 AM)</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">Lunch (12:30 PM)</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">Dinner (8:00 PM)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 bg-white">
+                        {% for day_idx, day_name in days %}
+                        <tr class="hover:bg-zinc-50 transition">
+                            <td class="px-4 py-3 font-bold text-sm text-zinc-900 bg-zinc-50/50">
+                                {{ day_name }}
+                            </td>
+                            {% for m in meal_types %}
+                            <td class="px-3 py-2">
+                                <textarea name="items_{{ day_idx }}_{{ m.value }}" rows="2"
+                                    placeholder="e.g. Scrambled eggs, Toast, Tea"
+                                    class="w-full text-xs rounded-lg border-zinc-200 focus:ring-indigo-600 focus:border-indigo-600 p-2">{{ menu_matrix[day_idx][m.value] }}</textarea>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile Accordion (visible on mobile, hidden on md+) -->
+        <div class="md:hidden space-y-3">
+            {% for day_idx, day_name in days %}
+            <details class="group bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden" {% if day_idx == 0 %}open{% endif %}>
+                <summary class="flex items-center justify-between p-4 cursor-pointer font-bold text-zinc-900 text-sm select-none bg-zinc-50 hover:bg-zinc-100">
+                    <span>{{ day_name }} Menu</span>
+                    <svg class="h-5 w-5 text-zinc-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </summary>
+                <div class="p-4 space-y-3 border-t border-zinc-100">
+                    {% for m in meal_types %}
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">{{ m.value|capitalize }}</label>
+                        <textarea name="items_{{ day_idx }}_{{ m.value }}" rows="2"
+                            placeholder="e.g. Rice, Dal, Mixed Veg"
+                            class="w-full text-xs rounded-lg border-zinc-200 focus:ring-indigo-600 focus:border-indigo-600 p-2">{{ menu_matrix[day_idx][m.value] }}</textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+
+        <!-- Save Button Bar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-4 flex items-center justify-between sticky bottom-4 z-10">
+            <span class="text-xs text-zinc-500">Separate items with commas or newlines</span>
+            <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition active:scale-[0.98]">
+                Save Full Week Menu
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
