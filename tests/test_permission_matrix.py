@@ -68,6 +68,8 @@ def get_all_api_routes(app: FastAPI) -> list[tuple[str, str, APIRoute]]:
         for route in routes:
             if isinstance(route, APIRoute):
                 full_path = prefix + route.path
+                if not full_path.startswith("/api"):
+                    continue
                 methods = route.methods or set()
                 for method in sorted(methods):
                     if method in ("GET", "POST", "PUT", "PATCH", "DELETE"):
