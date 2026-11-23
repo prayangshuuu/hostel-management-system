@@ -1,0 +1,83 @@
+<div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-center justify-center p-4 text-center">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" onclick="document.getElementById('modal-container').innerHTML = ''"></div>
+
+        <!-- Modal Dialog -->
+        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl transition-all border border-zinc-200">
+            <div class="flex items-center justify-between border-b border-zinc-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-zinc-900">Register Hostel Visitor</h3>
+                    <p class="text-xs text-zinc-500">Security checkpoint visitor check-in</p>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-container').innerHTML = ''"
+                    class="text-zinc-400 hover:text-zinc-500 rounded-lg p-1 hover:bg-zinc-100">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="mt-4 rounded-xl bg-rose-50 border border-rose-200 p-4 flex items-start gap-3 text-rose-800">
+                <svg class="h-5 w-5 text-rose-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div class="text-sm">
+                    <p class="font-semibold">Visiting Hours Restriction</p>
+                    <p>{{ error }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <form action="/admin/visitors/register" method="POST"
+                hx-post="/admin/visitors/register"
+                hx-target="#modal-container"
+                class="mt-4 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div>
+                    <label for="student_id" class="block text-xs font-semibold text-zinc-700 mb-1">Student to Visit <span class="text-rose-500">*</span></label>
+                    <select id="student_id" name="student_id" required
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                        <option value="">Select resident student...</option>
+                        {% for st in students %}
+                        <option value="{{ st.id }}" {% if selected_student_id == st.id %}selected{% endif %}>
+                            {{ st.user.full_name if st.user else '' }} ({{ st.student_no }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="name" class="block text-xs font-semibold text-zinc-700 mb-1">Visitor Full Name <span class="text-rose-500">*</span></label>
+                        <input type="text" id="name" name="name" value="{{ name or '' }}" required placeholder="e.g. John Doe"
+                            class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-xs font-semibold text-zinc-700 mb-1">Contact Phone <span class="text-rose-500">*</span></label>
+                        <input type="tel" id="phone" name="phone" value="{{ phone or '' }}" required placeholder="e.g. +1234567890"
+                            class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="relation" class="block text-xs font-semibold text-zinc-700 mb-1">Relationship to Resident <span class="text-rose-500">*</span></label>
+                    <input type="text" id="relation" name="relation" value="{{ relation or '' }}" required placeholder="e.g. Parent, Guardian, Sibling"
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-100">
+                    <button type="button" onclick="document.getElementById('modal-container').innerHTML = ''"
+                        class="px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 rounded-lg">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm">
+                        Confirm Check-In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

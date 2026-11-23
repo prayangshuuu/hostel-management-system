@@ -1,0 +1,148 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Visitors Management | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Hostel Visitors</h1>
+            <p class="text-sm text-zinc-500">Active visitor tracking and historical security logs</p>
+        </div>
+        <div>
+            <button type="button"
+                hx-get="/admin/visitors/modal/register"
+                hx-target="#modal-container"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Register Visitor
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Visitors Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+            <div class="flex items-center gap-2">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h2 class="text-base font-bold text-zinc-900">Currently Inside Hostel ({{ active_visitors|length }} Active)</h2>
+            </div>
+            <span class="text-xs text-zinc-400">Live tracker</span>
+        </div>
+
+        {% if active_visitors %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for v in active_visitors %}
+            <div class="p-4 rounded-xl border border-zinc-200 bg-zinc-50 flex flex-col justify-between space-y-3">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="font-bold text-zinc-900 text-sm">{{ v.name }}</p>
+                        <p class="text-xs text-zinc-500 font-mono">{{ v.phone }} &bull; {{ v.relation }}</p>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        Active
+                    </span>
+                </div>
+                <div class="text-xs text-zinc-600 space-y-1 bg-white p-2.5 rounded-lg border border-zinc-200">
+                    <p><span class="text-zinc-400">Visiting:</span> <span class="font-semibold text-zinc-800">{{ v.student.user.full_name if v.student and v.student.user else '' }}</span></p>
+                    <p><span class="text-zinc-400">Since:</span> {{ v.check_in_at|datetime_format }}</p>
+                </div>
+                <form action="/admin/visitors/{{ v.id }}/checkout" method="POST"
+                    hx-post="/admin/visitors/{{ v.id }}/checkout"
+                    hx-target="#main-content">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit"
+                        class="w-full py-2 px-3 text-xs font-bold rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm transition">
+                        Check Out Visitor
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="py-4 text-center text-sm text-zinc-400">No active visitors currently recorded in the hostels.</p>
+        {% endif %}
+    </div>
+
+    <!-- Visitor History -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="p-4 border-b border-zinc-100 flex items-center justify-between">
+            <h2 class="text-base font-bold text-zinc-900">Visitor Activity Logs</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Visitor</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Student Visited</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Relation</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Check In</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Check Out</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for v in visitors %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="text-sm font-semibold text-zinc-900">{{ v.name }}</p>
+                            <p class="text-xs text-zinc-500 font-mono">{{ v.phone }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-700">
+                            {{ v.student.user.full_name if v.student and v.student.user else '' }}
+                            <span class="text-xs text-zinc-400 block font-mono">{{ v.student.student_no if v.student else '' }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-600">
+                            {{ v.relation }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-zinc-500 font-mono">
+                            {{ v.check_in_at|datetime_format }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-zinc-500 font-mono">
+                            {{ v.check_out_at|datetime_format if v.check_out_at else '—' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if v.check_out_at %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-700">
+                                Completed
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                Active
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-sm text-zinc-400">
+                            No visitor records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pages > 1 %}
+        <div class="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
+            <span class="text-xs text-zinc-500">Showing page {{ page }} of {{ pages }} ({{ total }} total)</span>
+            <div class="flex items-center gap-1">
+                {% if page > 1 %}
+                <a href="/admin/visitors?page={{ page - 1 }}&size={{ size }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Previous</a>
+                {% endif %}
+                {% if page < pages %}
+                <a href="/admin/visitors?page={{ page + 1 }}&size={{ size }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
