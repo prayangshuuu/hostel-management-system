@@ -16,6 +16,7 @@ from app.repositories.allocation_repository import AllocationRepository
 from app.repositories.billing_repository import InvoiceRepository
 from app.repositories.complaint_repository import ComplaintRepository
 from app.repositories.operations_repository import AttendanceRepository, LeaveRepository
+from app.repositories.student_repository import StudentRepository
 from app.schemas.common import PaginationParams
 from app.schemas.student import StudentCreate, StudentUpdate
 from app.services.student_service import StudentService
@@ -180,7 +181,7 @@ async def create_student(
                     "phone": phone or "",
                 },
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
     except Exception as e:
         logger.exception("Validation exception creating student: %s", e)
@@ -188,7 +189,7 @@ async def create_student(
             request,
             "admin/students/create_modal.html",
             {"current_user": user, "error": str(e)},
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 
@@ -300,12 +301,14 @@ async def edit_student_submit(
         )
     except Exception as e:
         logger.warning("Error updating student: %s", e)
-        student = await student_service.get_student(id, current_user=user)
+        await db.rollback()
+        student_repo = StudentRepository(db)
+        student = await student_repo.get_by_id(id)
         return render_template(
             request,
             "admin/students/edit_modal.html",
             {"current_user": user, "student": student, "error": str(e)},
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 

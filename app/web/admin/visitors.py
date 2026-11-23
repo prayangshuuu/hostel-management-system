@@ -173,7 +173,7 @@ async def register_visitor_submit(
                 "phone": phone,
                 "relation": relation,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 

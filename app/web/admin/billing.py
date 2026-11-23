@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -112,8 +113,10 @@ async def create_fee_submit(
             response.headers["HX-Redirect"] = "/admin/billing/fees"
             return response
         return RedirectResponse(url="/admin/billing/fees", status_code=status.HTTP_303_SEE_OTHER)
-    except AppException as e:
-        logger.warning("Error creating fee structure: %s", e.message)
+    except (AppException, ValidationError) as e:
+        error_msg = e.message if isinstance(e, AppException) else str(e)
+        logger.warning("Error creating fee structure: %s", error_msg)
+        await db.rollback()
         hostel_repo = HostelRepository(db)
         hostels, _ = await hostel_repo.list(PaginationParams(page=1, size=100))
         return render_template(
@@ -122,7 +125,7 @@ async def create_fee_submit(
             {
                 "hostels": hostels,
                 "room_types": list(RoomType),
-                "error": e.message,
+                "error": error_msg,
                 "form_data": {
                     "hostel_id": hostel_id,
                     "room_type": room_type,
@@ -131,7 +134,7 @@ async def create_fee_submit(
                     "description": description,
                 },
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 
@@ -184,7 +187,7 @@ async def edit_fee_submit(
             request,
             "admin/billing/fees/edit_modal.html",
             {"fee": fee, "error": e.message},
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 
@@ -348,7 +351,7 @@ async def generate_invoices_confirm(
             request,
             "admin/billing/generate/preview_card.html",
             {"error": e.message},
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 
@@ -552,7 +555,7 @@ async def record_payment_submit(
                 "payment_methods": list(PaymentMethod),
                 "error": e.message,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 

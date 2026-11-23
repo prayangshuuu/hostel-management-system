@@ -150,5 +150,5 @@ async def assign_student_submit(
                 "today": start_date,
                 "error": e.message,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )

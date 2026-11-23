@@ -240,7 +240,7 @@ async def allocate_submit(
                 "today": start_date,
                 "error": e.message,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 
@@ -321,7 +321,7 @@ async def transfer_submit(
                 "today": transfer_date,
                 "error": e.message,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 

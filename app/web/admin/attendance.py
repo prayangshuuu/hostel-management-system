@@ -191,7 +191,7 @@ async def gate_action_submit(
                 "allocation": allocation,
                 "error": e.message,
             },
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
 

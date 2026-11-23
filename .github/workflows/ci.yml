@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   lint:
     name: Lint
@@ -126,7 +129,7 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: Run test suite with coverage
-        run: uv run pytest -q -W error -p randomly --cov=app --cov-fail-under=90
+        run: uv run pytest -q -W error -W "ignore:Setting per-request cookies:DeprecationWarning" -W "ignore::starlette.exceptions.StarletteDeprecationWarning" -p randomly --cov=app --cov-fail-under=90
 
   docker:
     name: Docker Build
