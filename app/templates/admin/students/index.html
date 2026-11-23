@@ -1,0 +1,143 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Students — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Students</h1>
+            <p class="mt-1 text-sm text-zinc-500">Manage student resident profiles, accounts, and allocations.</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <button type="button"
+                hx-get="/admin/students/new"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                onclick="document.getElementById('modal-container').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Student
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 p-4 mb-6">
+        <form method="GET" action="/admin/students" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+                <label for="search" class="block text-xs font-medium text-zinc-600 mb-1">Search</label>
+                <input type="text" id="search" name="search" value="{{ filters.search }}" placeholder="Name, student no, email..."
+                    class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="department" class="block text-xs font-medium text-zinc-600 mb-1">Department</label>
+                <input type="text" id="department" name="department" value="{{ filters.department }}" placeholder="e.g. Computer Science"
+                    class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="year" class="block text-xs font-medium text-zinc-600 mb-1">Year</label>
+                <select id="year" name="year"
+                    class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Years</option>
+                    {% for y in range(1, 7) %}
+                    <option value="{{ y }}" {% if filters.year == y|string %}selected{% endif %}>Year {{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="gender" class="block text-xs font-medium text-zinc-600 mb-1">Gender</label>
+                <select id="gender" name="gender"
+                    class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Genders</option>
+                    <option value="male" {% if filters.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if filters.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if filters.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="allocated" class="block text-xs font-medium text-zinc-600 mb-1">Allocated</label>
+                <div class="flex gap-2">
+                    <select id="allocated" name="allocated"
+                        class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">All</option>
+                        <option value="yes" {% if filters.allocated == 'yes' %}selected{% endif %}>Allocated</option>
+                        <option value="no" {% if filters.allocated == 'no' %}selected{% endif %}>Unallocated</option>
+                    </select>
+                    <button type="submit"
+                        class="px-4 py-2 bg-zinc-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-zinc-800 transition">
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200 text-left text-sm">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th scope="col" class="py-3.5 pl-4 pr-3 text-left font-semibold text-zinc-900 sm:pl-6">Student</th>
+                        <th scope="col" class="px-3 py-3.5 font-semibold text-zinc-900">Student No</th>
+                        <th scope="col" class="px-3 py-3.5 font-semibold text-zinc-900">Department / Year</th>
+                        <th scope="col" class="px-3 py-3.5 font-semibold text-zinc-900">Gender</th>
+                        <th scope="col" class="px-3 py-3.5 font-semibold text-zinc-900">Allocation</th>
+                        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for s in students %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 sm:pl-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
+                                    {{ s.full_name|initials }}
+                                </div>
+                                <div>
+                                    <a href="/admin/students/{{ s.id }}" class="font-medium text-zinc-900 hover:text-indigo-600">
+                                        {{ s.full_name }}
+                                    </a>
+                                    <p class="text-xs text-zinc-500">{{ s.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-zinc-700 font-mono text-xs">{{ s.student_no }}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-zinc-700">
+                            <div>{{ s.department }}</div>
+                            <div class="text-xs text-zinc-400">Year {{ s.year }}</div>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-zinc-700 capitalize">{{ s.gender.value if s.gender else '-' }}</td>
+                        <td class="whitespace-nowrap px-3 py-4">
+                            {% if s.active_allocation %}
+                            <span class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                {{ s.active_allocation.room_number }} (Bed {{ s.active_allocation.bed_label }})
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600">
+                                Unallocated
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                            <a href="/admin/students/{{ s.id }}" class="text-indigo-600 hover:text-indigo-900">View<span class="sr-only">, {{ s.full_name }}</span></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 text-sm">
+                            No students found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "components/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
