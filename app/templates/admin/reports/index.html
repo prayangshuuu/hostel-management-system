@@ -1,0 +1,86 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Operational & Financial Reports | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Reports & Analytics Hub</h1>
+        <p class="text-sm text-zinc-500">Comprehensive executive reports, occupancy analytics, revenue metrics, and data exports</p>
+    </div>
+
+    <!-- Reports Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 1. Occupancy -->
+        <a href="/admin/reports/occupancy" class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 hover:border-indigo-500 hover:shadow-md transition flex flex-col justify-between space-y-4 group">
+            <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-zinc-900 group-hover:text-indigo-600 transition">Occupancy Report</h2>
+                <p class="text-xs text-zinc-500">Bed utilization rates, vacant capacity, and block-by-block distribution breakdowns.</p>
+            </div>
+            <span class="text-xs font-semibold text-indigo-600 flex items-center gap-1">View Occupancy &rarr;</span>
+        </a>
+
+        <!-- 2. Revenue -->
+        <a href="/admin/reports/revenue" class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 hover:border-emerald-500 hover:shadow-md transition flex flex-col justify-between space-y-4 group">
+            <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-zinc-900 group-hover:text-emerald-600 transition">Revenue & Collections</h2>
+                <p class="text-xs text-zinc-500">Billed fees, collected payments, monthly run rates, and payment method statistics.</p>
+            </div>
+            <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">View Revenue &rarr;</span>
+        </a>
+
+        <!-- 3. Defaulters -->
+        <a href="/admin/reports/defaulters" class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 hover:border-rose-500 hover:shadow-md transition flex flex-col justify-between space-y-4 group">
+            <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-zinc-900 group-hover:text-rose-600 transition">Defaulters List</h2>
+                <p class="text-xs text-zinc-500">Overdue unpaid balances, student contacts, outstanding days, and billing notices.</p>
+            </div>
+            <span class="text-xs font-semibold text-rose-600 flex items-center gap-1">View Defaulters &rarr;</span>
+        </a>
+
+        <!-- 4. Complaints -->
+        <a href="/admin/reports/complaints" class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 hover:border-amber-500 hover:shadow-md transition flex flex-col justify-between space-y-4 group">
+            <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-zinc-900 group-hover:text-amber-600 transition">Complaints & Maintenance</h2>
+                <p class="text-xs text-zinc-500">Resolution time averages, category distribution, and facility upkeep response rates.</p>
+            </div>
+            <span class="text-xs font-semibold text-amber-600 flex items-center gap-1">View Complaints &rarr;</span>
+        </a>
+
+        <!-- 5. Attendance -->
+        <a href="/admin/reports/attendance" class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 hover:border-purple-500 hover:shadow-md transition flex flex-col justify-between space-y-4 group">
+            <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-zinc-900 group-hover:text-purple-600 transition">Daily Attendance Analytics</h2>
+                <p class="text-xs text-zinc-500">Hostel residency rates, student curfew tracking, leave counts, and physical headcount.</p>
+            </div>
+            <span class="text-xs font-semibold text-purple-600 flex items-center gap-1">View Attendance &rarr;</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
