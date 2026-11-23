@@ -1,0 +1,82 @@
+<div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity"></div>
+
+<div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-zinc-200">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+                <h3 class="text-base font-semibold leading-6 text-zinc-900">Add Fee Structure</h3>
+                <button type="button" onclick="closeModal()" class="text-zinc-400 hover:text-zinc-500 focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="mx-6 mt-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form hx-post="/admin/billing/fees" hx-target="#modal-container" class="p-6 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div>
+                    <label for="fee_hostel" class="block text-xs font-medium text-zinc-700 mb-1">Hostel *</label>
+                    <select id="fee_hostel" name="hostel_id" required
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">-- Choose Hostel --</option>
+                        {% for h in hostels %}
+                        <option value="{{ h.id }}" {% if form_data and form_data.hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="room_type" class="block text-xs font-medium text-zinc-700 mb-1">Room Type *</label>
+                        <select id="room_type" name="room_type" required
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            {% for rt in room_types %}
+                            <option value="{{ rt.value }}" {% if form_data and form_data.room_type == rt.value %}selected{% endif %}>{{ rt.value|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="academic_year" class="block text-xs font-medium text-zinc-700 mb-1">Academic Year *</label>
+                        <input type="text" id="academic_year" name="academic_year" placeholder="e.g. 2026-2027" required
+                            value="{{ form_data.academic_year if form_data else '2026-2027' }}"
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="amount" class="block text-xs font-medium text-zinc-700 mb-1">Monthly Amount ($) *</label>
+                    <input type="number" step="0.01" min="0" id="amount" name="amount" required placeholder="500.00"
+                        value="{{ form_data.amount if form_data else '' }}"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="description" class="block text-xs font-medium text-zinc-700 mb-1">Description (Optional)</label>
+                    <input type="text" id="description" name="description" placeholder="Notes or remarks"
+                        value="{{ form_data.description if form_data else '' }}"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+                        Save Fee Structure
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

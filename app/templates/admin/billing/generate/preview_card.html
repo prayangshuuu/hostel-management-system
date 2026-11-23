@@ -1,0 +1,51 @@
+{% if error %}
+<div class="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800">
+    {{ error }}
+</div>
+{% else %}
+<div class="rounded-2xl bg-zinc-50 border border-zinc-200 p-6 space-y-5">
+    <div class="flex items-center justify-between border-b border-zinc-200/80 pb-4">
+        <div>
+            <h3 class="text-base font-semibold text-zinc-900">Invoice Generation Preview</h3>
+            <p class="text-xs text-zinc-500 mt-0.5">Billing window: {{ period_start|date_format }} to {{ period_end|date_format }} (Due: {{ due_date|date_format }})</p>
+        </div>
+        <span class="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-600/20">
+            Preview Mode
+        </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl p-4 border border-zinc-200">
+            <p class="text-xs font-medium text-zinc-500 uppercase">New Invoices</p>
+            <p class="mt-1 text-2xl font-bold text-indigo-600">{{ candidate_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-zinc-200">
+            <p class="text-xs font-medium text-zinc-500 uppercase">Total Amount</p>
+            <p class="mt-1 text-2xl font-bold text-zinc-900">{{ total_amount|currency }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-zinc-200">
+            <p class="text-xs font-medium text-zinc-500 uppercase">Skipped Duplicates</p>
+            <p class="mt-1 text-2xl font-bold text-zinc-600">{{ skipped_count }}</p>
+        </div>
+    </div>
+
+    {% if candidate_count > 0 %}
+    <form hx-post="/admin/billing/generate/confirm" hx-target="#preview-step-container" class="pt-2 flex justify-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="hostel_id" value="{{ hostel_id }}">
+        <input type="hidden" name="period_start" value="{{ period_start }}">
+        <input type="hidden" name="period_end" value="{{ period_end }}">
+        <input type="hidden" name="due_date" value="{{ due_date }}">
+
+        <button type="submit"
+            class="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition">
+            Confirm & Generate {{ candidate_count }} Invoices
+        </button>
+    </form>
+    {% else %}
+    <div class="p-3 text-center text-xs text-zinc-500 border border-dashed border-zinc-200 rounded-lg bg-white">
+        All active allocations in this period already have invoices generated (idempotent guard).
+    </div>
+    {% endif %}
+</div>
+{% endif %}

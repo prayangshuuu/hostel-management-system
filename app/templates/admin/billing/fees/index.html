@@ -1,0 +1,70 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Fee Structures — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Fee Structures</h1>
+            <p class="mt-1 text-sm text-zinc-500">Configure recurring room and hostel pricing rules.</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <button type="button"
+                hx-get="/admin/billing/fees/new"
+                hx-target="#modal-container"
+                onclick="document.getElementById('modal-container').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Fee Structure
+            </button>
+        </div>
+    </div>
+
+    <!-- Fees Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        <table class="min-w-full divide-y divide-zinc-200 text-left text-sm">
+            <thead class="bg-zinc-50">
+                <tr>
+                    <th class="py-3.5 pl-6 pr-3 font-semibold text-zinc-900">Hostel</th>
+                    <th class="px-3 py-3.5 font-semibold text-zinc-900">Room Type</th>
+                    <th class="px-3 py-3.5 font-semibold text-zinc-900">Academic Year</th>
+                    <th class="px-3 py-3.5 font-semibold text-zinc-900">Amount / Month</th>
+                    <th class="px-3 py-3.5 font-semibold text-zinc-900">Status</th>
+                    <th class="py-3.5 pr-6 text-right font-semibold text-zinc-900">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-200">
+                {% for f in fees %}
+                <tr class="hover:bg-zinc-50 transition">
+                    <td class="py-4 pl-6 pr-3 font-medium text-zinc-900">{{ f.hostel_name or f.hostel_id }}</td>
+                    <td class="px-3 py-4 capitalize text-zinc-700">{{ f.room_type.value }}</td>
+                    <td class="px-3 py-4 font-mono text-xs text-zinc-600">{{ f.academic_year }}</td>
+                    <td class="px-3 py-4 font-bold text-zinc-900">{{ f.amount|currency }}</td>
+                    <td class="px-3 py-4">
+                        <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold {{ 'bg-emerald-50 text-emerald-700' if f.is_active else 'bg-zinc-100 text-zinc-600' }}">
+                            {{ 'Active' if f.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="py-4 pr-6 text-right space-x-3 text-xs font-medium">
+                        <button type="button"
+                            hx-get="/admin/billing/fees/{{ f.id }}/edit"
+                            hx-target="#modal-container"
+                            onclick="document.getElementById('modal-container').classList.remove('hidden')"
+                            class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="py-12 text-center text-zinc-500 text-sm">No fee structures configured.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include "components/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
