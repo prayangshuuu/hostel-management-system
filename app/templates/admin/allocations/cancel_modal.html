@@ -1,0 +1,38 @@
+<div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity"></div>
+
+<div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-zinc-200">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+                <h3 class="text-base font-semibold leading-6 text-zinc-900">Cancel Bed Allocation</h3>
+                <button type="button" onclick="closeModal()" class="text-zinc-400 hover:text-zinc-500 focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form hx-post="/admin/allocations/{{ allocation.id }}/cancel" hx-target="#modal-container" class="p-6 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="rounded-lg bg-rose-50 border border-rose-200 p-4">
+                    <p class="text-sm text-rose-800">
+                        Warning: Cancelling an allocation will immediately release the bed. This is intended for allocations created by error.
+                    </p>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                        Back
+                    </button>
+                    <button type="submit"
+                        class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-500 transition">
+                        Cancel Allocation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

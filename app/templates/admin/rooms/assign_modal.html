@@ -1,0 +1,70 @@
+<div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity"></div>
+
+<div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-zinc-200">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+                <h3 class="text-base font-semibold leading-6 text-zinc-900">Assign Student to Room {{ room.number }}</h3>
+                <button type="button" onclick="closeModal()" class="text-zinc-400 hover:text-zinc-500 focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="mx-6 mt-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form hx-post="/admin/rooms/{{ room.id }}/assign" hx-target="#modal-container" class="p-6 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div>
+                    <label for="student_search_input" class="block text-xs font-medium text-zinc-700 mb-1">Search Unallocated Student *</label>
+                    <input type="text" id="student_search_input" placeholder="Type student name or number..."
+                        hx-get="/admin/allocations/assign-student-search"
+                        hx-trigger="keyup changed delay:300ms"
+                        hx-target="#assign-student-results"
+                        name="q"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div id="assign-student-results" class="mt-1">
+                    <!-- HTMX search results injected here -->
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="bed_select" class="block text-xs font-medium text-zinc-700 mb-1">Select Free Bed *</label>
+                        <select id="bed_select" name="bed_id" required
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            {% for b in free_beds %}
+                            <option value="{{ b.id }}">Bed {{ b.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="start_date" class="block text-xs font-medium text-zinc-700 mb-1">Start Date *</label>
+                        <input type="date" id="start_date" name="start_date" required value="{{ today }}"
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+                        Assign to Room
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

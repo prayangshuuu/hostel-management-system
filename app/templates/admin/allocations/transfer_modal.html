@@ -1,0 +1,83 @@
+<div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity"></div>
+
+<div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-zinc-200">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+                <div>
+                    <h3 class="text-base font-semibold leading-6 text-zinc-900">Transfer Student</h3>
+                    <p class="text-xs text-zinc-500 mt-0.5">Transfer <span class="font-medium text-zinc-900">{{ student.full_name }}</span> to another bed</p>
+                </div>
+                <button type="button" onclick="closeModal()" class="text-zinc-400 hover:text-zinc-500 focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="mx-6 mt-4 rounded-lg bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-800 font-medium" role="alert">
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 text-rose-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <form hx-post="/admin/allocations/{{ allocation.id }}/transfer" hx-target="#modal-container" class="p-6 space-y-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="hostel_transfer_select" class="block text-xs font-medium text-zinc-700 mb-1">Target Hostel *</label>
+                        <select id="hostel_transfer_select" name="hostel_id" required
+                            hx-get="/admin/allocations/rooms-for-hostel?student_id={{ student.id }}"
+                            hx-target="#transfer-bed-container"
+                            hx-trigger="change"
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">-- Choose Hostel --</option>
+                            {% for h in hostels %}
+                            <option value="{{ h.id }}">{{ h.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="transfer_date" class="block text-xs font-medium text-zinc-700 mb-1">Transfer Date *</label>
+                        <input type="date" id="transfer_date" name="transfer_date" required value="{{ today }}"
+                            class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="reason" class="block text-xs font-medium text-zinc-700 mb-1">Reason for Transfer</label>
+                    <input type="text" id="reason" name="reason" placeholder="e.g. Student request, maintenance"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-700 mb-2">Select Target Bed *</label>
+                    <div id="transfer-bed-container" class="min-h-[140px] max-h-72 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                        <div class="text-center py-8 text-zinc-400 text-xs">
+                            Select a target hostel above to view available bed tiles.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+                        Confirm Transfer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+<div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity"></div>
+
+<div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-zinc-200">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+                <h3 class="text-base font-semibold leading-6 text-zinc-900">Vacate Bed Allocation</h3>
+                <button type="button" onclick="closeModal()" class="text-zinc-400 hover:text-zinc-500 focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="mx-6 mt-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form hx-post="/admin/allocations/{{ allocation.id }}/vacate" hx-target="#modal-container" class="p-6 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <p class="text-sm text-zinc-600">
+                    Are you sure you want to mark this allocation as vacated? The bed will immediately become available for other students.
+                </p>
+
+                <div>
+                    <label for="vacate_date" class="block text-xs font-medium text-zinc-700 mb-1">Vacate Date *</label>
+                    <input type="date" id="vacate_date" name="vacate_date" required value="{{ today }}"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="reason" class="block text-xs font-medium text-zinc-700 mb-1">Reason (Optional)</label>
+                    <input type="text" id="reason" name="reason" placeholder="e.g. End of semester, withdrawal"
+                        class="w-full text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 transition">
+                        Confirm Vacate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
