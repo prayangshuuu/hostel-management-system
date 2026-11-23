@@ -1,0 +1,217 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Ticket #{{ complaint.id|string|truncate(8, True, '') }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+    <!-- Breadcrumb & Back -->
+    <div class="flex items-center gap-2 text-sm text-zinc-500">
+        <a href="/admin/complaints" class="hover:text-zinc-900 font-semibold flex items-center gap-1">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            All Complaints
+        </a>
+        <span>/</span>
+        <span class="text-zinc-800 font-mono">Ticket #{{ complaint.id|string|truncate(8, True, '') }}</span>
+    </div>
+
+    <!-- Complaint Header Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-zinc-100 pb-6">
+            <div class="space-y-1">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ complaint.status.value|status_color }}">
+                        {{ complaint.status.value.replace('_', ' ').title() }}
+                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold {% if complaint.priority.value == 'urgent' %}bg-rose-100 text-rose-800 border border-rose-300{% elif complaint.priority.value == 'high' %}bg-orange-100 text-orange-800{% elif complaint.priority.value == 'medium' %}bg-amber-100 text-amber-800{% else %}bg-zinc-100 text-zinc-700{% endif %}">
+                        {{ complaint.priority.value|capitalize }} Priority
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-medium">
+                        {{ complaint.category.value|capitalize }}
+                    </span>
+                </div>
+                <h1 class="text-2xl font-bold text-zinc-900 pt-1">{{ complaint.title }}</h1>
+                <p class="text-xs text-zinc-400">Created {{ complaint.created_at|datetime_format }}</p>
+            </div>
+
+            <!-- Resolution Time Badge (if resolved) -->
+            {% if resolution_time_str %}
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-right">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Resolved In</p>
+                <p class="text-lg font-extrabold text-emerald-900">{{ resolution_time_str }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Description -->
+        <div>
+            <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Issue Description</h2>
+            <div class="bg-zinc-50 rounded-xl p-4 text-sm text-zinc-800 whitespace-pre-wrap border border-zinc-100">
+                {{ complaint.description }}
+            </div>
+        </div>
+
+        <!-- Metadata Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-100 text-sm">
+            <div>
+                <span class="text-xs text-zinc-400 block mb-0.5">Reported By</span>
+                <p class="font-semibold text-zinc-900">{{ complaint.student.user.full_name if complaint.student and complaint.student.user else '' }}</p>
+                <p class="text-xs text-zinc-500 font-mono">{{ complaint.student.student_no if complaint.student else '' }}</p>
+            </div>
+            <div>
+                <span class="text-xs text-zinc-400 block mb-0.5">Location</span>
+                <p class="font-semibold text-zinc-900">Room {{ complaint.room.number if complaint.room else '—' }}</p>
+                <p class="text-xs text-zinc-500">{{ complaint.room.block.hostel.name if complaint.room and complaint.room.block and complaint.room.block.hostel else '' }}</p>
+            </div>
+            <div>
+                <span class="text-xs text-zinc-400 block mb-0.5">Assigned Staff</span>
+                <p class="font-semibold text-zinc-900">{{ complaint.assignee.full_name if complaint.assignee else 'Unassigned' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Actions Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Status Transitions Form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 space-y-4">
+            <h2 class="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">Update Status</h2>
+            {% if allowed_transitions %}
+            <form action="/admin/complaints/{{ complaint.id }}/status" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-600 mb-2">Select Next Action:</label>
+                    <div class="space-y-2">
+                        {% for next_st in allowed_transitions %}
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 cursor-pointer">
+                            <input type="radio" name="status" value="{{ next_st.value }}" required
+                                class="text-indigo-600 focus:ring-indigo-600">
+                            <span class="text-sm font-semibold text-zinc-800">
+                                {% if next_st.value == 'in_progress' %}
+                                    Start Work (In Progress)
+                                {% elif next_st.value == 'resolved' %}
+                                    Mark Resolved
+                                {% elif next_st.value == 'closed' %}
+                                    Close Ticket
+                                {% elif next_st.value == 'open' %}
+                                    Reopen Ticket
+                                {% else %}
+                                    {{ next_st.value|capitalize }}
+                                {% endif %}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="resolution_notes" class="block text-xs font-semibold text-zinc-600 mb-1">Resolution / Status Notes</label>
+                    <textarea id="resolution_notes" name="resolution_notes" rows="2" placeholder="e.g. Electrician replaced ceiling fan capacitor."
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600"></textarea>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="mark_room_maintenance" name="mark_room_maintenance" value="true"
+                        class="rounded border-zinc-300 text-rose-600 focus:ring-rose-600">
+                    <label for="mark_room_maintenance" class="text-xs font-semibold text-rose-700">
+                        Mark room under maintenance (blocks new bed allocations)
+                    </label>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-sm shadow-sm transition">
+                    Submit Status Transition
+                </button>
+            </form>
+            {% else %}
+            <div class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-center text-sm text-zinc-500">
+                This ticket is <strong>Closed</strong>. No further status changes are permitted.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Assign Staff Form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 space-y-4">
+            <h2 class="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">Assign Staff Member</h2>
+            <form action="/admin/complaints/{{ complaint.id }}/assign" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div>
+                    <label for="assigned_to" class="block text-xs font-semibold text-zinc-600 mb-1">Select Staff Member</label>
+                    <select id="assigned_to" name="assigned_to" required
+                        class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                        <option value="">Select staff...</option>
+                        {% for s in staff_members %}
+                        <option value="{{ s.id }}" {% if complaint.assigned_to == s.id %}selected{% endif %}>
+                            {{ s.full_name }} ({{ s.role.value|capitalize }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <p class="text-xs text-zinc-500">Assigning a ticket automatically transitions OPEN tickets to IN PROGRESS.</p>
+
+                <button type="submit"
+                    class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                    Update Assignee
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Comments & Activity Timeline -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 space-y-6">
+        <h2 class="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">Activity & Comments Thread</h2>
+
+        <!-- Comments List -->
+        <div class="space-y-4">
+            {% for cm in complaint.comments %}
+            <div class="p-4 rounded-xl {% if cm.is_internal %}bg-amber-50/70 border border-amber-200{% else %}bg-zinc-50 border border-zinc-100{% endif %} space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-zinc-200 text-zinc-700 flex items-center justify-center font-bold text-[10px]">
+                            {{ (cm.author_name or 'Staff')|initials }}
+                        </div>
+                        <span class="text-xs font-bold text-zinc-800">{{ cm.author_name or 'Staff Member' }}</span>
+                        {% if cm.is_internal %}
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-200 text-amber-900">
+                            Internal Staff Only
+                        </span>
+                        {% endif %}
+                    </div>
+                    <span class="text-[11px] text-zinc-400 font-mono">{{ cm.created_at|datetime_format }}</span>
+                </div>
+                <p class="text-sm text-zinc-800 whitespace-pre-wrap">{{ cm.body }}</p>
+            </div>
+            {% else %}
+            <p class="text-center py-4 text-xs text-zinc-400">No comments recorded yet on this ticket.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Add Comment Form -->
+        <form action="/admin/complaints/{{ complaint.id }}/comment" method="POST" class="space-y-4 pt-4 border-t border-zinc-100">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div>
+                <label for="comment" class="block text-xs font-semibold text-zinc-700 mb-1">Add Comment or Work Log</label>
+                <textarea id="comment" name="comment" rows="3" required placeholder="Add updates, technician notes, or communication..."
+                    class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_internal" value="true"
+                        class="rounded border-zinc-300 text-amber-600 focus:ring-amber-600">
+                    <span class="text-xs font-semibold text-zinc-700">Internal note (hidden from student)</span>
+                </label>
+
+                <button type="submit"
+                    class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs shadow-sm transition">
+                    Post Comment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
