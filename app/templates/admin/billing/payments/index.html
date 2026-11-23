@@ -1,0 +1,90 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Payments — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Payments</h1>
+            <p class="mt-1 text-sm text-zinc-500">Audit trail of all recorded financial transactions and receipts.</p>
+        </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 p-4 mb-6">
+        <form method="GET" action="/admin/billing/payments" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="method" class="block text-xs font-medium text-zinc-600 mb-1">Payment Method</label>
+                <select id="method" name="method"
+                    class="w-full text-xs sm:text-sm rounded-lg border border-zinc-300 px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Payment Methods</option>
+                    {% for m in payment_methods %}
+                    <option value="{{ m.value }}" {% if filters.method == m.value %}selected{% endif %}>{{ m.value|replace('_', ' ')|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="sm:col-span-2 flex items-end gap-2">
+                <button type="submit"
+                    class="px-5 py-2 bg-zinc-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-zinc-800 transition">
+                    Filter
+                </button>
+                <a href="/admin/billing/payments"
+                    class="px-4 py-2 border border-zinc-300 bg-white text-zinc-700 rounded-lg text-xs sm:text-sm font-medium hover:bg-zinc-50 transition">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200 text-left text-sm">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th class="py-3.5 pl-6 pr-3 font-semibold text-zinc-900">Date & Time</th>
+                        <th class="px-3 py-3.5 font-semibold text-zinc-900">Invoice #</th>
+                        <th class="px-3 py-3.5 font-semibold text-zinc-900">Amount</th>
+                        <th class="px-3 py-3.5 font-semibold text-zinc-900">Method</th>
+                        <th class="px-3 py-3.5 font-semibold text-zinc-900">Reference</th>
+                        <th class="px-3 py-3.5 font-semibold text-zinc-900">Notes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for p in payments %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="whitespace-nowrap py-4 pl-6 pr-3 text-xs text-zinc-600">
+                            {{ p.created_at|datetime_format }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 font-mono text-xs font-bold text-zinc-900">
+                            <a href="/admin/billing/invoices/{{ p.invoice_id }}" class="text-indigo-600 hover:text-indigo-900">
+                                {{ p.invoice_no or p.invoice_id }}
+                            </a>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 font-bold text-emerald-700">
+                            {{ p.amount|currency }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-xs capitalize text-zinc-800">
+                            {{ p.method.value|replace('_', ' ') }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 font-mono text-xs text-zinc-600">
+                            {{ p.reference or '-' }}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-xs text-zinc-500">
+                            {{ p.notes or '-' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-zinc-500 text-sm">No payment records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "components/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

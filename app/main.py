@@ -5,13 +5,14 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.staticfiles import StaticFiles
 
 from app.api.v1 import api_router
 from app.core.config import settings
@@ -22,6 +23,7 @@ from app.core.security_middleware import (
     RequestBodyLimitMiddleware,
     SecurityHeadersMiddleware,
 )
+from app.web import web_router
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,12 @@ def create_app() -> FastAPI:
         )
 
     @application.exception_handler(StarletteHTTPException)
-    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> Response:
+        if exc.headers and "Location" in exc.headers:
+            return RedirectResponse(
+                url=exc.headers["Location"],
+                status_code=exc.status_code,
+            )
         code_map = {
             400: "BAD_REQUEST",
             401: "UNAUTHORIZED",
@@ -118,6 +125,7 @@ def create_app() -> FastAPI:
         code = code_map.get(exc.status_code, f"HTTP_{exc.status_code}")
         return JSONResponse(
             status_code=exc.status_code,
+            headers=exc.headers,
             content={
                 "error": {
                     "code": code,
@@ -156,6 +164,8 @@ def create_app() -> FastAPI:
         )
 
     application.include_router(api_router, prefix="/api/v1")
+    application.include_router(web_router)
+    application.mount("/static", StaticFiles(directory="app/static"), name="static")
 
     return application
 

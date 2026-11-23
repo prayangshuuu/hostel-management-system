@@ -1,0 +1,24 @@
+{% if total_pages and total_pages > 1 %}
+<nav class="flex items-center justify-between border-t border-zinc-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-b-xl" aria-label="Pagination">
+    <div class="hidden sm:block">
+        <p class="text-sm text-zinc-700">
+            Showing page <span class="font-medium">{{ current_page }}</span> of <span class="font-medium">{{ total_pages }}</span>
+            (<span class="font-medium">{{ total_items }}</span> total results)
+        </p>
+    </div>
+    <div class="flex flex-1 justify-between sm:justify-end gap-2">
+        {% if current_page > 1 %}
+        <a href="?page={{ current_page - 1 }}{{ query_string_suffix or '' }}"
+            class="relative inline-flex items-center rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            Previous
+        </a>
+        {% endif %}
+        {% if current_page < total_pages %}
+        <a href="?page={{ current_page + 1 }}{{ query_string_suffix or '' }}"
+            class="relative inline-flex items-center rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            Next
+        </a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-50 antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/output.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full font-sans text-zinc-900" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none" aria-live="polite">
+        {% block toasts %}{% endblock %}
+    </div>
+
+    <div id="modal-container" class="relative z-50 hidden" aria-modal="true" role="dialog">
+        <!-- Dynamically injected modal content -->
+    </div>
+
+    {% block layout %}{% endblock %}
+
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            evt.detail.headers['X-CSRF-Token'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        });
+
+        function closeModal() {
+            const container = document.getElementById('modal-container');
+            container.classList.add('hidden');
+            container.innerHTML = '';
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
