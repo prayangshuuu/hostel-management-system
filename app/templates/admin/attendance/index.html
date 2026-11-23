@@ -1,0 +1,148 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Attendance Logs | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Attendance Logs</h1>
+            <p class="text-sm text-zinc-500">Historical gate movements, check-ins, and departures</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/attendance/gate" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Gate Terminal
+            </a>
+            <a href="/admin/attendance/present" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-semibold text-sm shadow-sm transition">
+                Present Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-4 sm:p-6">
+        <form method="GET" action="/admin/attendance" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+                <label for="hostel_id" class="block text-xs font-semibold text-zinc-600 mb-1">Hostel</label>
+                <select id="hostel_id" name="hostel_id" class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                    <option value="">All Hostels</option>
+                    {% for h in hostels %}
+                    <option value="{{ h.id }}" {% if selected_hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="type" class="block text-xs font-semibold text-zinc-600 mb-1">Action Type</label>
+                <select id="type" name="type" class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+                    <option value="">All Actions</option>
+                    <option value="check_in" {% if selected_type == 'check_in' %}selected{% endif %}>Check In</option>
+                    <option value="check_out" {% if selected_type == 'check_out' %}selected{% endif %}>Check Out</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="date_from" class="block text-xs font-semibold text-zinc-600 mb-1">Date From</label>
+                <input type="date" id="date_from" name="date_from" value="{{ date_from }}"
+                    class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+            </div>
+
+            <div>
+                <label for="date_to" class="block text-xs font-semibold text-zinc-600 mb-1">Date To</label>
+                <input type="date" id="date_to" name="date_to" value="{{ date_to }}"
+                    class="block w-full text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-2">
+            </div>
+
+            <div class="sm:col-span-2 md:col-span-4 flex justify-end gap-2 pt-2">
+                <a href="/admin/attendance" class="px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-lg">Reset</a>
+                <button type="submit" class="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Timestamp</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Student</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Room Allocation</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Gate Notes</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Recorded By</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for log in logs %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 font-mono">
+                            {{ log.timestamp|datetime_format }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {{ (log.student.user.full_name if log.student and log.student.user else log.student.student_no)|initials }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-zinc-900">{{ log.student.user.full_name if log.student and log.student.user else 'Student' }}</p>
+                                    <p class="text-xs text-zinc-500 font-mono">{{ log.student.student_no if log.student else '' }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-700">
+                            {% if log.student and log.student.allocations %}
+                                {% for a in log.student.allocations if a.status.value == 'active' %}
+                                    {{ a.bed.room.block.hostel.name }} &bull; Room {{ a.bed.room.number }}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-xs text-zinc-400">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ log.type.value|status_color }}">
+                                {{ log.type.value.replace('_', ' ').title() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-zinc-600 max-w-xs truncate">
+                            {{ log.remarks or '—' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-zinc-500">
+                            {{ log.recorder.full_name if log.recorder else 'Staff' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-sm text-zinc-400">
+                            No attendance logs matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pages > 1 %}
+        <div class="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
+            <span class="text-xs text-zinc-500">Showing page {{ page }} of {{ pages }} ({{ total }} total)</span>
+            <div class="flex items-center gap-1">
+                {% if page > 1 %}
+                <a href="/admin/attendance?page={{ page - 1 }}&size={{ size }}&hostel_id={{ selected_hostel_id or '' }}&type={{ selected_type or '' }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Previous</a>
+                {% endif %}
+                {% if page < pages %}
+                <a href="/admin/attendance?page={{ page + 1 }}&size={{ size }}&hostel_id={{ selected_hostel_id or '' }}&type={{ selected_type or '' }}"
+                    class="px-2.5 py-1 text-xs font-semibold bg-white border border-zinc-300 rounded hover:bg-zinc-50">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

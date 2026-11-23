@@ -1,0 +1,91 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Present Now | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Present Now</h1>
+            <p class="text-sm text-zinc-500">Live headcount of students physically present inside hostels</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/attendance/gate" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Gate Terminal
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <form method="GET" action="/admin/attendance/present" class="flex items-center gap-3 w-full sm:w-auto">
+            <label for="hostel_id" class="text-xs font-semibold text-zinc-500 shrink-0">Filter Hostel:</label>
+            <select id="hostel_id" name="hostel_id" onchange="this.form.submit()"
+                class="text-sm rounded-lg border-zinc-300 focus:ring-indigo-600 focus:border-indigo-600 py-1.5 px-3">
+                {% for h in hostels %}
+                <option value="{{ h.id }}" {% if selected_hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <div class="flex items-center gap-2 text-sm font-semibold text-zinc-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Total Present: <span class="text-emerald-800 font-extrabold text-base">{{ total_present }}</span> students
+        </div>
+    </div>
+
+    <!-- Present Students Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Student</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Hostel</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Room & Bed</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Last Check-In Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 bg-white">
+                    {% for st in present_students %}
+                    <tr class="hover:bg-zinc-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {{ st.student_name|initials }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-zinc-900">{{ st.student_name }}</p>
+                                    <p class="text-xs text-zinc-500 font-mono">{{ st.student_no }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-700">
+                            {{ st.hostel_name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-800">
+                                Room {{ st.room_number }} (Bed {{ st.bed_label }})
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
+                            {{ st.last_check_in|datetime_format }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-sm text-zinc-400">
+                            No students are currently recorded as present inside this hostel.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

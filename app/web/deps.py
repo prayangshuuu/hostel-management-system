@@ -95,6 +95,8 @@ def render_template(
     ctx["request"] = request
     ctx["app_name"] = settings.APP_NAME
     ctx["app_version"] = settings.APP_VERSION
+    if "current_user" not in ctx:
+        ctx["current_user"] = getattr(request.state, "user", None)
 
     # Ensure CSRF token is present in context and cookie
     csrf_token = request.cookies.get(CSRF_COOKIE_NAME)
@@ -142,6 +144,7 @@ async def get_current_web_user_optional(
         user = await user_repo.get_by_id(user_id)
         if not user or not user.is_active:
             return None
+        request.state.user = user
         return user
     except Exception:
         return None
