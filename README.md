@@ -93,6 +93,7 @@ uv run mypy app
 - [x] Test Hardening & Bug Hunt Sweep (96% Coverage, Permission Matrix, Property Testing, E2E Scenarios, N+1 Query Elimination, Reversible Migrations) ✅
 - [x] Security & Performance Hardening (Rate limiting, Account lockout, Refresh token rotation/revocation, Security headers, DB indexes, GZip, Load testing) ✅
 - [x] Admin portal — students, allocations, billing ✅
+- [x] Admin portal — operations, notices, audit, reports ✅
 - [x] Docker, CI, Final Audit & Release v1.0.0 (Multi-stage Dockerfile, CI pipeline, OpenAPI export, Release v1.0.0) ✅
 
 ## License
